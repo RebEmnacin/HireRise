@@ -1,37 +1,39 @@
-"""Shapes of the data going in and out of the API (validated by Pydantic)."""
-from typing import Optional
+"""Database connection. Works with SQLite (default) or Postgres via DATABASE_URL."""
+import os
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
+load_dotenv()
 
-class ORM(BaseModel):
-    # lets Pydantic read straight from SQLAlchemy objects
-    model_config = ConfigDict(from_attributes=True)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hr.db").strip()
 
+# Tolerate a value pasted straight from a provider's "copy" button, e.g.  psql 'postgresql://...'
+if DATABASE_URL.lower().startswith("psql"):
+    DATABASE_URL = DATABASE_URL[4:].strip()
+DATABASE_URL = DATABASE_URL.strip("'\"").strip()
 
-class EmployeeBrief(ORM):
-    id: int
-    employee_no: str
-    first_name: str
-    last_name: str
-    position: Optional[str] = None
-    status: str
+# Some hosts give "postgres://" but SQLAlchemy wants "postgresql://"
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Use the psycopg 3 driver for Postgres
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
-class UserOut(ORM):
-    id: int
-    email: EmailStr
-    role: str
-    is_active: bool
-    employee: Optional[EmployeeBrief] = None  # admins may not have an HR record
+# SQLite needs this flag because FastAPI uses multiple threads
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
-
-class TokenOut(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserOut
+engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+Base = declarative_base()
 
 
-class ChangePasswordIn(BaseModel):
-    current_password: str
-    new_password: str = Field(min_length=8, max_length=128)
+def get_db():
+    """FastAPI dependency: gives each request its own DB session, then closes it."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
