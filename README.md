@@ -4,7 +4,7 @@
 
 # HireRise
 
-**An HR and recruitment website that helps companies hire well, keep people, and help them rise.**
+**HR management website built for a company’s HR team. Track employee status, workload, and attendance, and keep every record organized in one dashboard.**
 
 Browse and filter open roles, apply with one click, and get in touch through a validated contact form.
 
