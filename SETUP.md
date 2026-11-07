@@ -29,7 +29,6 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
 Then start it:
-
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
