@@ -23,7 +23,7 @@ Built for a company's HR team, with a separate, simpler view for employees.
 ## Screenshot
 
 <p align="center">
-  <img src="docs/screenshots/HireRise-Screenshot.png" alt="HireRise HR dashboard" width="800" />
+  <img src="docs\screenshots\HireRise-Screenshot.png" alt="HireRise HR dashboard" width="800" />
 </p>
 
 ## Features
