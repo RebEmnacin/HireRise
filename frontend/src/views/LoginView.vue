@@ -30,7 +30,7 @@ async function submit() {
   <div class="login">
     <!-- left: brand panel (hidden on phones) -->
     <section class="login-side">
-      <span class="brand"><span class="brand-mark">H</span><span>Hire<span class="rise">Rise</span></span></span>
+      <span class="brand"><img class="brand-logo" src="/logo.png" alt="" /><span>Hire<span class="rise">Rise</span></span></span>
       <h2>Everything about your people, <em>in one place.</em></h2>
       <p>Track employee status, attendance, leave and work without the spreadsheets.</p>
       <ul class="login-points">

@@ -1,9 +1,9 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../stores/auth.js'
 import NavIcon from './NavIcon.vue'
-import { label } from '../lib/format'
+import { label } from '../lib/format.js'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -34,14 +34,14 @@ function signOut() {
   <div class="app">
     <!-- phone only: top bar with the hamburger -->
     <header class="topbar">
-      <span class="brand"><span class="brand-mark">H</span><span>Hire<span class="rise">Rise</span></span></span>
+      <span class="brand"><img class="brand-logo" src="/logo.png" alt="" /><span>Hire<span class="rise">Rise</span></span></span>
       <button class="menu-btn" :class="{ open: menuOpen }" type="button" aria-label="Toggle menu" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
         <span></span><span></span><span></span>
       </button>
     </header>
 
     <aside class="sidebar" :class="{ open: menuOpen }">
-      <span class="brand"><span class="brand-mark">H</span><span>Hire<span class="rise">Rise</span></span></span>
+      <span class="brand"><img class="brand-logo" src="/logo.png" alt="" /><span>Hire<span class="rise">Rise</span></span></span>
 
       <nav class="side-nav">
         <RouterLink v-for="l in visibleLinks" :key="l.to" :to="l.to" active-class="active">

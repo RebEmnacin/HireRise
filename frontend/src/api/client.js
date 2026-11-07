@@ -33,5 +33,6 @@ export function errorMessage(err) {
   const detail = err.response.data?.detail
   if (typeof detail === 'string') return detail
   if (Array.isArray(detail)) return detail.map((d) => d.msg).join(', ') // FastAPI validation errors
+  if (err.response.status >= 500) return 'Server error. Check the backend terminal for details.'
   return 'Something went wrong. Please try again.'
 }

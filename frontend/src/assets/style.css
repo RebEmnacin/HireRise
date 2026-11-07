@@ -78,15 +78,15 @@ h3 {
   letter-spacing: -0.02em;
 }
 
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  background: var(--brand);
-  color: var(--white);
-  font-weight: 800;
-  border-radius: 50%;
+.brand-logo {
+  height: 34px;
+  width: auto; /* keeps the logo's proportions */
+}
+
+/* on dark backgrounds the navy logo would vanish, so turn it white */
+.sidebar .brand-logo,
+.login-side .brand-logo {
+  filter: brightness(0) invert(1);
 }
 
 .brand .rise {
