@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="frontend/public/logo.png" alt="HireRise logo" width="96" />
+<img src="frontend/public/logo.svg" alt="HireRise logo" width="96" />
 
 # HireRise
 
