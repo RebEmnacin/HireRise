@@ -1,10 +1,14 @@
 <script setup>
-import { icons } from '../data/icons'
-
-// a small icon for the sidebar (no draw animation): <NavIcon name="users" />
-defineProps({ name: { type: String, required: true } })
+defineProps({ title: { type: String, required: true }, subtitle: { type: String, default: '' } })
 </script>
 
 <template>
-  <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" v-html="icons[name]"></svg>
+  <div class="page-header">
+    <div>
+      <h1>{{ title }}</h1>
+      <p v-if="subtitle">{{ subtitle }}</p>
+    </div>
+    <!-- anything placed inside <PageHeader>...</PageHeader> shows here (buttons, filters) -->
+    <div class="page-actions"><slot /></div>
+  </div>
 </template>
