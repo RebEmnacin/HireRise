@@ -8,4 +8,11 @@ export const icons = {
   mail: '<rect pathLength="1" width="20" height="16" x="2" y="4" rx="2"/><path pathLength="1" d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
   pin: '<path pathLength="1" d="M20 10c0 4.99-5.54 10.19-7.4 11.8a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0"/><circle pathLength="1" cx="12" cy="10" r="3"/>',
   clock: '<circle pathLength="1" cx="12" cy="12" r="10"/><path pathLength="1" d="M12 6v6l4 2"/>',
+  dashboard: '<rect pathLength="1" width="7" height="9" x="3" y="3" rx="1"/><rect pathLength="1" width="7" height="5" x="14" y="3" rx="1"/><rect pathLength="1" width="7" height="9" x="14" y="12" rx="1"/><rect pathLength="1" width="7" height="5" x="3" y="16" rx="1"/>',
+  calendar: '<path pathLength="1" d="M8 2v4"/><path pathLength="1" d="M16 2v4"/><rect pathLength="1" width="18" height="18" x="3" y="4" rx="2"/><path pathLength="1" d="M3 10h18"/><path pathLength="1" d="M8 14h.01"/><path pathLength="1" d="M12 14h.01"/><path pathLength="1" d="M16 14h.01"/><path pathLength="1" d="M8 18h.01"/><path pathLength="1" d="M12 18h.01"/><path pathLength="1" d="M16 18h.01"/>',
+  tasks: '<path pathLength="1" d="m3 17 2 2 4-4"/><path pathLength="1" d="m3 7 2 2 4-4"/><path pathLength="1" d="M13 6h8"/><path pathLength="1" d="M13 12h8"/><path pathLength="1" d="M13 18h8"/>',
+  logout: '<path pathLength="1" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline pathLength="1" points="16 17 21 12 16 7"/><line pathLength="1" x1="21" x2="9" y1="12" y2="12"/>',
+  plus: '<path pathLength="1" d="M5 12h14"/><path pathLength="1" d="M12 5v14"/>',
+  userCheck: '<path pathLength="1" d="m16 11 2 2 4-4"/><path pathLength="1" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle pathLength="1" cx="9" cy="7" r="4"/>',
+  inbox: '<polyline pathLength="1" points="22 12 16 12 14 15 10 15 8 12 2 12"/><path pathLength="1" d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
 }
