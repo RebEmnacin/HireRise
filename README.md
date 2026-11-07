@@ -6,8 +6,6 @@
 
 **HR management website built for a company’s HR team. Track employee status, workload, and attendance, and keep every record organized in one dashboard.**
 
-Browse and filter open roles, apply with one click, and get in touch through a validated contact form.
-
 ![Vue](https://img.shields.io/badge/Vue_3-35495e?logo=vuedotjs&logoColor=4fc08d)
 ![Vite](https://img.shields.io/badge/Vite-646cff?logo=vite&logoColor=white)
 ![Vue Router](https://img.shields.io/badge/Vue_Router-35495e?logo=vuedotjs&logoColor=4fc08d)
