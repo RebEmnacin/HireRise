@@ -3,6 +3,7 @@ import { ref, reactive, computed } from 'vue'
 import { useHrStore, DEPARTMENTS } from '../stores/hr'
 import { fmtDate, initials, label } from '../lib/format'
 import PageHeader from '../components/PageHeader.vue'
+import { motion, AnimatePresence } from 'motion-v'
 import StatusBadge from '../components/StatusBadge.vue'
 
 const hr = useHrStore()
@@ -96,8 +97,25 @@ function save() {
   </div>
 
   <!-- the modal: v-if shows it only while showForm is true. Clicking the dark area closes it. -->
-  <div v-if="showForm" class="modal-backdrop" @click.self="showForm = false">
-    <form class="modal" novalidate @submit.prevent="save">
+  <AnimatePresence>
+    <motion.div
+      v-if="showForm"
+      class="modal-backdrop"
+      :initial="{ opacity: 0 }"
+      :animate="{ opacity: 1 }"
+      :exit="{ opacity: 0 }"
+      :transition="{ duration: 0.2 }"
+      @click.self="showForm = false"
+    >
+    <motion.form
+      class="modal"
+      novalidate
+      :initial="{ opacity: 0, scale: 0.96, y: 18 }"
+      :animate="{ opacity: 1, scale: 1, y: 0 }"
+      :exit="{ opacity: 0, scale: 0.96, y: 18 }"
+      :transition="{ type: 'spring', duration: 0.4, bounce: 0.2 }"
+      @submit.prevent="save"
+    >
       <h2>Add employee</h2>
       <div class="field-row">
         <div class="field" :class="{ invalid: errors.first }">
@@ -132,6 +150,7 @@ function save() {
         <button class="btn btn-outline" type="button" @click="showForm = false">Cancel</button>
         <button class="btn btn-primary" type="submit">Save employee</button>
       </div>
-    </form>
-  </div>
+    </motion.form>
+    </motion.div>
+  </AnimatePresence>
 </template>
