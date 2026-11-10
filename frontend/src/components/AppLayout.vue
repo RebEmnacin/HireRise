@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 import NavIcon from './NavIcon.vue'
+import { motion, AnimatePresence } from 'motion-v'
 import { label } from '../lib/format.js'
 
 const auth = useAuthStore()
@@ -63,7 +64,20 @@ function signOut() {
 
     <main class="main">
       <!-- the current page (Dashboard, Employees...) appears here -->
-      <RouterView />
+      <RouterView v-slot="{ Component, route: current }">
+        <!-- mode="wait": the old page fades out first, then the new one fades in -->
+        <AnimatePresence mode="wait">
+          <motion.div
+            :key="current.path"
+            :initial="{ opacity: 0, y: 14 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :exit="{ opacity: 0, y: -8 }"
+            :transition="{ duration: 0.22, ease: 'easeOut' }"
+          >
+            <component :is="Component" />
+          </motion.div>
+        </AnimatePresence>
+      </RouterView>
     </main>
   </div>
 </template>
