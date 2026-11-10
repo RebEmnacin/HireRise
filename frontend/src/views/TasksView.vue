@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/auth'
 import { useHrStore } from '../stores/hr'
 import { fmtDate, initials } from '../lib/format'
 import PageHeader from '../components/PageHeader.vue'
+import { motion, AnimatePresence } from 'motion-v'
 
 const auth = useAuthStore()
 const hr = useHrStore()
@@ -56,7 +57,8 @@ function save() {
     <section v-for="c in columns" :key="c.key" class="column">
       <h2>{{ c.text }} <span>{{ inColumn(c.key).length }}</span></h2>
 
-      <article v-for="t in inColumn(c.key)" :key="t.id" class="task">
+      <!-- layout-id: the same card slides from one column to the next when you move it -->
+      <motion.article v-for="t in inColumn(c.key)" :key="t.id" class="task" :layout-id="`task-${t.id}`" :transition="{ type: 'spring', duration: 0.45, bounce: 0.15 }">
         <h3>{{ t.title }}</h3>
         <div class="task-foot">
           <span class="person" style="gap: 8px">
@@ -68,14 +70,31 @@ function save() {
             <button type="button" :disabled="t.status === 'done'" :aria-label="`Move ${t.title} forward`" @click="hr.moveTask(t.id, 1)">›</button>
           </span>
         </div>
-      </article>
+      </motion.article>
 
       <p v-if="!inColumn(c.key).length" class="muted" style="font-size: 0.85rem; padding: 8px 4px">Nothing here.</p>
     </section>
   </div>
 
-  <div v-if="showForm" class="modal-backdrop" @click.self="showForm = false">
-    <form class="modal" novalidate @submit.prevent="save">
+  <AnimatePresence>
+    <motion.div
+      v-if="showForm"
+      class="modal-backdrop"
+      :initial="{ opacity: 0 }"
+      :animate="{ opacity: 1 }"
+      :exit="{ opacity: 0 }"
+      :transition="{ duration: 0.2 }"
+      @click.self="showForm = false"
+    >
+    <motion.form
+      class="modal"
+      novalidate
+      :initial="{ opacity: 0, scale: 0.96, y: 18 }"
+      :animate="{ opacity: 1, scale: 1, y: 0 }"
+      :exit="{ opacity: 0, scale: 0.96, y: 18 }"
+      :transition="{ type: 'spring', duration: 0.4, bounce: 0.2 }"
+      @submit.prevent="save"
+    >
       <h2>New task</h2>
       <div class="field" :class="{ invalid: errors.title }">
         <label for="t-title">Title</label><input id="t-title" v-model="form.title" type="text" />
@@ -99,6 +118,7 @@ function save() {
         <button class="btn btn-outline" type="button" @click="showForm = false">Cancel</button>
         <button class="btn btn-primary" type="submit">Create task</button>
       </div>
-    </form>
-  </div>
+    </motion.form>
+    </motion.div>
+  </AnimatePresence>
 </template>
