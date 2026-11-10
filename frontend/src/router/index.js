@@ -1,19 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import AppLayout from '../components/AppLayout.vue'
+import LandingView from '../views/LandingView.vue'
 import LoginView from '../views/LoginView.vue'
 
 // Which roles may open which pages is written here, in meta.roles. No meta.roles = every logged-in user.
 const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path: '/', name: 'landing', component: LandingView, meta: { guestOnly: true } },
     { path: '/login', name: 'login', component: LoginView, meta: { guestOnly: true } },
     {
       path: '/',
       component: AppLayout, // the sidebar + top bar; the pages below show inside it
       meta: { requiresAuth: true },
       children: [
-        { path: '', redirect: '/dashboard' },
         { path: 'dashboard', name: 'dashboard', component: () => import('../views/DashboardView.vue') },
         { path: 'employees', name: 'employees', component: () => import('../views/EmployeesView.vue'), meta: { roles: ['admin', 'hr'] } },
         { path: 'attendance', name: 'attendance', component: () => import('../views/AttendanceView.vue') },

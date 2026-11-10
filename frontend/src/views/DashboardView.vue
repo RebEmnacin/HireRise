@@ -1,8 +1,8 @@
 <script setup>
 import { computed } from 'vue'
-import { useAuthStore } from '../stores/auth'
-import { useHrStore } from '../stores/hr'
-import { fmtDate, fmtTime, label, daysInclusive } from '../lib/format'
+import { useAuthStore } from '../stores/auth.js'
+import { useHrStore } from '../stores/hr.js'
+import { fmtDate, fmtTime, label, daysInclusive } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.vue'
 import LineIcon from '../components/LineIcon.vue'
 import CountUp from '../components/CountUp.vue'

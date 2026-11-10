@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useAuthStore } from '../stores/auth'
-import { useHrStore, LATE_AFTER } from '../stores/hr'
-import { fmtDate, fmtTime, hoursBetween, initials } from '../lib/format'
+import { useAuthStore } from '../stores/auth.js'
+import { useHrStore, LATE_AFTER } from '../stores/hr.js'
+import { fmtDate, fmtTime, hoursBetween, initials } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 
