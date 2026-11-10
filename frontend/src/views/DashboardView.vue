@@ -6,6 +6,7 @@ import { fmtDate, fmtTime, label, daysInclusive } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.vue'
 import LineIcon from '../components/LineIcon.vue'
 import CountUp from '../components/CountUp.vue'
+import { motion, AnimatePresence } from 'motion-v'
 import StatusBadge from '../components/StatusBadge.vue'
 
 const auth = useAuthStore()
@@ -75,7 +76,15 @@ const myOpenTasks = computed(() => hr.myTasks.filter((t) => t.status !== 'done')
         <h2>Leave requests waiting</h2>
         <p class="sub">Approve or reject without leaving the dashboard.</p>
         <p v-if="!hr.pendingLeaves.length" class="empty">All caught up.</p>
-        <div v-for="l in hr.pendingLeaves.slice(0, 4)" :key="l.id" class="list-item">
+        <AnimatePresence>
+        <motion.div
+          v-for="l in hr.pendingLeaves.slice(0, 4)"
+          :key="l.id"
+          class="list-item"
+          layout
+          :exit="{ opacity: 0, x: 40 }"
+          :transition="{ duration: 0.25 }"
+        >
           <div>
             <strong>{{ hr.nameOf(l.employeeId) }}</strong>
             <small>{{ label(l.type) }} · {{ fmtDate(l.start) }}<template v-if="l.end !== l.start"> to {{ fmtDate(l.end) }}</template></small>
@@ -84,7 +93,8 @@ const myOpenTasks = computed(() => hr.myTasks.filter((t) => t.status !== 'done')
             <button class="btn btn-success btn-sm" type="button" @click="hr.decideLeave(l.id, 'approved')">Approve</button>
             <button class="btn btn-danger btn-sm" type="button" @click="hr.decideLeave(l.id, 'rejected')">Reject</button>
           </div>
-        </div>
+        </motion.div>
+        </AnimatePresence>
       </section>
     </div>
 
