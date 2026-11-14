@@ -44,14 +44,20 @@ onMounted(() => {
         : spring(90, 16, { delay: stagger(0.16, { startDelay: 0.2 }) }),
     )
 
-    // 2. the cards are dealt onto one stack, hold for a beat, then spring out into a fan
+    // 2. the cards spread out of one stack in a single smooth motion (no pause, no second step).
+    //    Each card starts upright and slightly lower, then one spring swings it out to its place in the fan.
+    //    Only the fade is quick, so the cards are already moving by the time you can see them.
     tiles.forEach((el, i) => {
+      const delay = 0.2 + i * 0.07
       if (reduce) {
-        animate(el, { opacity: [0, 1], rotate: [angle(i) * 0.4, angle(i)] }, { ...gentle, duration: 0.8, delay: 0.3 + i * 0.05 })
+        animate(el, { opacity: [0, 1], rotate: [angle(i) * 0.4, angle(i)] }, { ...gentle, duration: 0.8, delay })
         return
       }
-      animate(el, { opacity: [0, 1], y: [90, i * -3] }, spring(120, 17, { delay: 0.15 + i * 0.09 }))
-      animate(el, { rotate: angle(i), y: 0 }, spring(46, 8, { delay: 1.35 + i * 0.07 }))
+      animate(
+        el,
+        { opacity: [0, 1], rotate: [0, angle(i)], y: [60, 0] },
+        { default: spring(70, 13, { delay }), opacity: { duration: 0.15, delay } },
+      )
     })
 
     // 3. scrolling away: the text drifts up and fades, the hand sinks into the page below
@@ -447,7 +453,7 @@ const audiences = [
 .lp-fan-wrap {
   grid-area: fan;
   width: calc(640px * var(--k));
-  height: calc(235px * var(--k));
+  height: calc(330px * var(--k));
   overflow: hidden;
   scroll-margin-top: 80px;
 }
