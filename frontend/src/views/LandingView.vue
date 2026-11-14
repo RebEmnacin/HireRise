@@ -210,14 +210,12 @@ const audiences = [
   --lp-light: var(--bg);
   --lp-blue: var(--light-blue);
   --lp-ink: var(--ink);
-  --lp-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --lp-serif: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif; /* same font as the app and the logo lettering */
   min-height: 100vh;
   min-height: 100svh;
   padding-top: 14px; /* padding, not a margin on the nav: a margin would leak out and show the page background above */
   overflow-x: clip;
-  background:
-    radial-gradient(1100px 520px at 50% -8%, rgba(20, 76, 140, 0.55), transparent 70%),
-    var(--lp-bg);
+  background: var(--lp-bg);
   color: var(--white);
 }
 
@@ -271,9 +269,7 @@ const audiences = [
   padding: 7px 7px 7px 18px;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 999px;
-  background: rgba(14, 58, 110, 0.55);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--brand-dark);
 }
 .lp .brand {
   font-size: 1.05rem;
@@ -320,16 +316,16 @@ const audiences = [
 .lp-title {
   max-width: 24ch;
   font-family: var(--lp-serif);
-  font-size: clamp(2.5rem, 6.2vw, 5rem);
-  font-weight: 400;
-  line-height: 1.04;
-  letter-spacing: -0.025em;
+  font-size: clamp(2.4rem, 5.6vw, 4.6rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
   text-wrap: balance;
 }
 .lp-title em,
 .lp-h2 em {
   display: block; /* the accent phrase always sits on its own line */
-  font-style: italic;
+  font-style: normal;
   color: var(--lp-accent);
 }
 .lp-sub {
@@ -391,9 +387,9 @@ const audiences = [
 .lp-label {
   margin-bottom: 12px;
   font-family: var(--lp-serif);
-  font-size: clamp(0.95rem, 1.25vw, 1.15rem);
-  font-weight: 500;
-  letter-spacing: 0;
+  font-size: clamp(0.92rem, 1.15vw, 1.05rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
   line-height: 1.2;
 }
 .lp-tile small {
@@ -444,7 +440,7 @@ const audiences = [
 
 /* attendance */
 .lp-clock { display: flex; align-items: baseline; gap: 8px; }
-.lp-clock b { font-family: var(--lp-serif); font-size: clamp(1.6rem, 2.6vw, 2.2rem); font-weight: 500; line-height: 1; }
+.lp-clock b { font-family: var(--lp-serif); font-size: clamp(1.6rem, 2.6vw, 2.2rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
 .lp-clock span { font-size: 0.72rem; font-weight: 600; opacity: 0.65; }
 .lp-bars { display: flex; align-items: flex-end; gap: 6px; height: clamp(76px, 7vw, 100px); }
 .lp-bars span { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; }
@@ -501,7 +497,7 @@ const audiences = [
 .lp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(54px, 1fr)); gap: 6px; }
 .lp-stats span { min-width: 0; padding: 8px 7px; border-radius: 10px; background: rgba(255, 255, 255, 0.7); }
 .lp-stats small { font-size: 0.6rem; }
-.lp-stats b { display: block; font-family: var(--lp-serif); font-size: clamp(1.2rem, 2vw, 1.7rem); font-weight: 500; line-height: 1.1; }
+.lp-stats b { display: block; font-family: var(--lp-serif); font-size: clamp(1.2rem, 2vw, 1.7rem); font-weight: 800; line-height: 1.1; }
 .lp-spark { display: flex; align-items: flex-end; gap: 6px; height: clamp(36px, 4.5vw, 60px); }
 .lp-spark i { flex: 1; height: var(--s); border-radius: 5px 5px 2px 2px; background: var(--ink); }
 .lp-spark i:last-child { background: var(--brand); }
@@ -517,10 +513,10 @@ const audiences = [
 .lp-h2 {
   max-width: 16ch;
   font-family: var(--lp-serif);
-  font-size: clamp(2rem, 4.4vw, 3.4rem);
-  font-weight: 400;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
+  font-size: clamp(2rem, 4.2vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   text-align: center;
   text-wrap: balance;
 }
@@ -540,9 +536,9 @@ const audiences = [
 .lp-card h3 {
   margin-bottom: 16px;
   font-family: var(--lp-serif);
-  font-size: 1.45rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 .lp-card ul { display: grid; gap: 12px; }
 .lp-card li {
@@ -572,7 +568,7 @@ const audiences = [
   transform: translateY(14px);
   transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.lp-title { filter: blur(8px); transition-property: opacity, transform, filter; transition-delay: 0.1s; }
+.lp-title { transition-delay: 0.1s; }
 .lp-sub { transition-delay: 0.22s; }
 .lp-actions { transition-delay: 0.34s; }
 .lp.in .lp-nav,
