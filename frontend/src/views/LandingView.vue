@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { animate, scroll, stagger, press } from 'motion' // motion.dev: springs, staggering and scroll-linked animation
+import { animate, scroll, stagger, press, inView } from 'motion'
+import LineIcon from '../components/LineIcon.vue' // motion.dev: springs, staggering and scroll-linked animation
 
 const navEl = ref(null)
 const heroEl = ref(null)
@@ -8,6 +9,10 @@ const copyEl = ref(null)
 const fanEl = ref(null)
 const panEl = ref(null)
 const rolesEl = ref(null)
+const howEl = ref(null)
+const stackEl = ref(null)
+const faqEl = ref(null)
+const footEl = ref(null)
 const stops = [] // the scroll / press listeners, switched off when the page is left
 
 onMounted(() => {
@@ -89,6 +94,42 @@ onMounted(() => {
         return () => animate(el, { scale: 1 }, spring(500, 22))
       }),
     )
+
+    // 6. the sections below are SCRUBBED by the scrollbar: the animation moves exactly as far as you scroll,
+    //    so scrolling down zooms in and tilts the panels flat, and scrolling back up plays it in reverse.
+    //    (perspective on each section's wrapper is what makes the tilts look 3D)
+    const scrub = (el, keyframes, offset = ['start end', 'center 0.7'], target = el) =>
+      stops.push(scroll(animate(el, keyframes, { ease: 'linear' }), { target, offset }))
+
+    // how it works: the title zooms out to size, three panels swing in from the sides and the middle one rises
+    scrub(howEl.value.querySelector('.lp-h2'), { scale: [1.5, 1], y: [70, 0] }, ['start end', 'start 0.55'])
+    const stepEls = [...howEl.value.querySelectorAll('.lp-step')]
+    const from = [
+      { x: [-240, 0], rotateY: [42, 0], rotateX: [14, 0], scale: [0.8, 1] },
+      { y: [170, 0], rotateX: [32, 0], scale: [0.7, 1] },
+      { x: [240, 0], rotateY: [-42, 0], rotateX: [14, 0], scale: [0.8, 1] },
+    ]
+    stepEls.forEach((el, i) => scrub(el, from[i]))
+    scrub(howEl.value.querySelector('.lp-how-line i'), { scaleX: [0, 1] }, ['start 0.9', 'end 0.55'], howEl.value.querySelector('.lp-steps'))
+
+    // built with: the whole panel zooms OUT from a big, tilted-back view, then each card slides in from its own side
+    scrub(stackEl.value.querySelector('.lp-stack-panel'), { scale: [1.3, 1], rotateX: [-16, 0], y: [90, 0] }, ['start end', 'start 0.2'])
+    stackEl.value.querySelectorAll('.lp-tech').forEach((el, i) =>
+      scrub(el, { x: [i % 2 ? 110 : -110, 0], y: [70, 0], rotateZ: [i % 2 ? 7 : -7, 0] }, ['start end', 'center 0.8']),
+    )
+
+    // faq: the white sheet zooms IN to full size, and the questions swing in from alternate sides like doors
+    scrub(faqEl.value.querySelector('.lp-faq-sheet'), { scale: [0.86, 1], y: [60, 0] }, ['start end', 'start 0.25'])
+    faqEl.value.querySelectorAll('.lp-q').forEach((el, i) =>
+      scrub(el, { x: [i % 2 ? 140 : -140, 0], rotateY: [i % 2 ? -26 : 26, 0] }, ['start end', 'center 0.8']),
+    )
+
+    // footer: the big word zooms in and tips upright as the page runs out
+    scrub(footEl.value.querySelector('.lp-foot-word'), { scale: [0.62, 1], rotateX: [42, 0], y: [90, 0] }, ['start end', 'end end'], footEl.value)
+    scrub(footEl.value.querySelector('.lp-foot-cols'), { y: [60, 0] }, ['start end', 'center end'], footEl.value)
+
+    // the line icons draw themselves once their panel comes into view
+    stops.push(inView('.lp-step, .lp-tech', (el) => { el.classList.add('in') }, { amount: 0.4 }))
   } catch (err) {
     console.warn('landing animation failed, showing the page without it', err)
     showEverything()
@@ -127,6 +168,32 @@ const roles = [
   { name: 'Employee', scope: 'Own records only' },
 ]
 
+// how it works: three steps (the icon names come from data/icons.js)
+const steps = [
+  { n: '01', icon: 'userCheck', tone: 't-dark', title: 'HR creates the account', text: 'An admin or HR adds the employee and the account. There is no public sign-up, so only the right people get in.' },
+  { n: '02', icon: 'clock', tone: 't-light', title: 'The day gets logged', text: 'Employees clock in and out, request leave and update their tasks. Late is counted automatically after 09:15.' },
+  { n: '03', icon: 'dashboard', tone: 't-blue', title: 'HR decides in one click', text: 'Approve or reject leave, then read the whole company at a glance on the dashboard.' },
+]
+
+// built with: what the project is made of, grouped
+const stack = [
+  { icon: 'dashboard', title: 'Frontend', items: ['Vue 3', 'Vite', 'Pinia', 'Vue Router', 'Axios', 'Motion'] },
+  { icon: 'tasks', title: 'Backend', items: ['FastAPI', 'SQLAlchemy', 'Pydantic', 'Uvicorn'] },
+  { icon: 'inbox', title: 'Data and hosting', items: ['SQLite (local)', 'PostgreSQL', 'Neon', 'Vercel'] },
+  { icon: 'shield', title: 'Security', items: ['JWT sign-in', 'bcrypt hashing', 'Role-based access'] },
+]
+
+// faq: one open at a time
+const faq = [
+  { q: 'Who creates the accounts?', a: 'HR or an admin. HireRise has no public sign-up, so nobody can register themselves. The first admin is created when the system starts.' },
+  { q: 'What can an employee see?', a: 'Only their own records and tasks. Every page and every action is limited by the signed-in role.' },
+  { q: 'What happens when someone leaves?', a: 'HR deactivates the account and that person loses access straight away.' },
+  { q: 'How is "late" decided?', a: 'Clocking in after 09:15 counts as late. The attendance page and the dashboard use the same rule.' },
+  { q: 'Is HireRise a real product?', a: 'It is a portfolio project, built to learn the full stack. Sign-in is a real backend with hashed passwords. The HR data you see after signing in is generated sample data.' },
+]
+const openQ = ref(0)
+const year = new Date().getFullYear()
+
 // the "who it's for" cards
 const audiences = [
   {
@@ -157,7 +224,7 @@ const audiences = [
 </script>
 
 <template>
-  <div class="lp">
+  <div id="top" class="lp">
     <!-- floating pill navigation -->
     <header ref="navEl" class="lp-nav">
       <RouterLink to="/" class="brand">
@@ -168,6 +235,8 @@ const audiences = [
       <nav class="lp-links" aria-label="Page sections">
         <a href="#features" @click.prevent="go('features')">Features</a>
         <a href="#roles" @click.prevent="go('roles')">Who it's for</a>
+        <a href="#how" @click.prevent="go('how')">How it works</a>
+        <a href="#faq" @click.prevent="go('faq')">FAQ</a>
       </nav>
       <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent lp-nav-cta">Sign in</RouterLink>
     </header>
@@ -285,6 +354,92 @@ const audiences = [
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </RouterLink>
     </section>
+
+    <!-- how it works -->
+    <section id="how" ref="howEl" class="lp-how" aria-label="How HireRise works">
+      <h2 class="lp-h2">Three steps, <em>zero spreadsheets.</em></h2>
+      <div class="lp-steps">
+        <div class="lp-how-line" aria-hidden="true"><i></i></div>
+        <article v-for="s in steps" :key="s.n" class="lp-step" :class="s.tone">
+          <span class="lp-step-n">{{ s.n }}</span>
+          <LineIcon :name="s.icon" />
+          <h3>{{ s.title }}</h3>
+          <p>{{ s.text }}</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- built with -->
+    <section id="stack" ref="stackEl" class="lp-stack" aria-label="What HireRise is built with">
+      <div class="lp-stack-panel">
+        <span class="lp-eyebrow">Built with</span>
+        <h2 class="lp-h2">A full stack, <em>built by hand.</em></h2>
+        <div class="lp-tech-grid">
+          <article v-for="g in stack" :key="g.title" class="lp-tech">
+            <LineIcon :name="g.icon" />
+            <h3>{{ g.title }}</h3>
+            <ul>
+              <li v-for="it in g.items" :key="it">{{ it }}</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- faq -->
+    <section id="faq" ref="faqEl" class="lp-faq" aria-label="Frequently asked questions">
+      <div class="lp-faq-sheet">
+        <h2 class="lp-h2">Questions, <em>answered.</em></h2>
+        <div class="lp-qs">
+          <div v-for="(f, i) in faq" :key="f.q" class="lp-q" :class="{ open: openQ === i }">
+            <button type="button" class="lp-q-btn" :aria-expanded="openQ === i" :aria-controls="'faq-a-' + i" @click="openQ = openQ === i ? -1 : i">
+              <span>{{ f.q }}</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+            <div :id="'faq-a-' + i" class="lp-a" role="region">
+              <div><p>{{ f.a }}</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- footer -->
+    <footer ref="footEl" class="lp-foot">
+      <div class="lp-foot-cols">
+        <div class="lp-foot-brand">
+          <RouterLink to="/" class="brand">
+            <img class="brand-logo" src="/logo.png" alt="" />
+            <span>Hire<span class="rise">Rise</span></span>
+          </RouterLink>
+          <p>Employee records, attendance, leave and tasks in one place.</p>
+        </div>
+        <nav aria-label="Explore">
+          <h4>Explore</h4>
+          <a href="#features" @click.prevent="go('features')">Features</a>
+          <a href="#roles" @click.prevent="go('roles')">Who it's for</a>
+          <a href="#how" @click.prevent="go('how')">How it works</a>
+          <a href="#stack" @click.prevent="go('stack')">Built with</a>
+          <a href="#faq" @click.prevent="go('faq')">FAQ</a>
+        </nav>
+        <nav aria-label="Project">
+          <h4>Project</h4>
+          <a href="https://github.com/RebEmnacin/HireRise" target="_blank" rel="noopener">
+            Source on GitHub
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9" /></svg>
+          </a>
+          <RouterLink :to="{ name: 'login' }">Sign in</RouterLink>
+        </nav>
+      </div>
+      <div class="lp-foot-word" aria-hidden="true">Hire<span>Rise</span></div>
+      <div class="lp-foot-bar">
+        <span>© {{ year }} HireRise · A portfolio project by RebEmnacin</span>
+        <button type="button" class="lp-top" @click="go('top')">
+          Back to top
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
+        </button>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -667,6 +822,267 @@ const audiences = [
 }
 .lp .lp-roles .lp-btn-accent { background: var(--ink); border-color: var(--ink); color: var(--white); }
 .lp .lp-roles .lp-btn-accent:hover { background: var(--brand); border-color: var(--brand); }
+
+/* ---- how it works: the dark sheet rounds over the bottom of the white one ---- */
+.lp-roles { padding-bottom: clamp(120px, 16vh, 170px); } /* room for the dark sheet that overlaps the bottom */
+.lp-how {
+  position: relative;
+  z-index: 2;
+  margin-top: -56px;
+  padding: clamp(80px, 13vh, 140px) clamp(20px, 4vw, 56px) clamp(70px, 11vh, 120px);
+  border-radius: 56px 56px 0 0;
+  background: var(--lp-bg);
+  display: grid;
+  justify-items: center;
+  gap: clamp(40px, 7vh, 72px);
+  scroll-margin-top: 20px;
+}
+.lp-how .lp-h2,
+.lp-stack .lp-h2 { color: var(--white); max-width: 18ch; }
+.lp-how .lp-h2 em,
+.lp-stack .lp-h2 em { color: var(--lp-accent); display: block; font-style: normal; }
+.lp-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  width: 100%;
+  max-width: 1100px;
+  perspective: 1200px; /* gives the tilted panels depth */
+}
+.lp-how-line { /* the line that links the three panels and fills as you scroll */
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 50%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  z-index: 0;
+}
+.lp-how-line i {
+  display: block;
+  height: 100%;
+  background: var(--lp-accent);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+.lp-step {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 300px;
+  padding: 26px;
+  border-radius: 20px;
+  box-shadow: -6px 12px 34px rgba(6, 22, 42, 0.38);
+  will-change: transform;
+}
+.lp-step.t-dark { background: var(--lp-dark); color: var(--white); }
+.lp-step.t-light { background: var(--lp-light); color: var(--lp-ink); }
+.lp-step.t-blue { background: var(--lp-blue); color: var(--lp-ink); }
+.lp-step-n { font-family: var(--lp-serif); font-size: 3.2rem; font-weight: 800; line-height: 1; letter-spacing: -0.05em; opacity: 0.9; }
+.lp-step .icon-wrap { display: inline-grid; width: 46px; height: 46px; place-items: center; border-radius: 12px; background: rgba(127, 150, 180, 0.2); }
+.lp-step .icon-wrap svg { width: 24px; height: 24px; }
+.lp-step h3 { font-family: var(--lp-serif); font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
+.lp-step p { font-size: 0.95rem; line-height: 1.55; opacity: 0.82; }
+
+/* ---- built with ---- */
+.lp-stack {
+  position: relative;
+  z-index: 2;
+  padding: 0 clamp(20px, 4vw, 56px) clamp(70px, 11vh, 120px);
+  perspective: 1400px;
+  scroll-margin-top: 20px;
+}
+.lp-stack-panel {
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(40px, 7vw, 76px) clamp(20px, 4vw, 56px);
+  border-radius: 40px;
+  background: var(--lp-dark);
+  box-shadow: 0 30px 70px rgba(6, 22, 42, 0.4);
+  transform-origin: 50% 0;
+  will-change: transform;
+}
+.lp-stack .lp-eyebrow {
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(211, 206, 190, 0.4);
+  color: var(--lp-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lp-tech-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  width: 100%;
+  margin-top: 12px;
+}
+.lp-tech {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  will-change: transform;
+}
+.lp-tech .icon-wrap { display: inline-grid; width: 40px; height: 40px; place-items: center; border-radius: 10px; background: rgba(211, 206, 190, 0.16); color: var(--lp-accent); }
+.lp-tech .icon-wrap svg { width: 21px; height: 21px; }
+.lp-tech h3 { font-family: var(--lp-serif); font-size: 1.1rem; font-weight: 700; }
+.lp-tech ul { display: flex; flex-wrap: wrap; gap: 8px; }
+.lp-tech li {
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--lp-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ---- faq: a white sheet ---- */
+.lp-faq {
+  position: relative;
+  z-index: 2;
+  padding: 0 clamp(14px, 2.5vw, 32px) 0;
+  perspective: 1400px;
+  scroll-margin-top: 20px;
+}
+.lp-faq-sheet {
+  display: grid;
+  justify-items: center;
+  gap: 36px;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: clamp(64px, 10vh, 110px) clamp(20px, 4vw, 56px) clamp(120px, 16vh, 170px);
+  border-radius: 56px 56px 0 0;
+  background: var(--white);
+  color: var(--lp-ink);
+  transform-origin: 50% 0;
+  will-change: transform;
+}
+.lp-faq .lp-h2 em { color: var(--brand); display: block; font-style: normal; }
+.lp-qs { display: grid; gap: 12px; width: 100%; max-width: 780px; perspective: 1200px; }
+.lp-q {
+  border: 1px solid rgba(14, 58, 110, 0.12);
+  border-radius: 16px;
+  background: var(--lp-light);
+  will-change: transform;
+}
+.lp-q-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 18px 22px;
+  background: none;
+  border: 0;
+  color: var(--lp-ink);
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer; /* auto | pointer | default */
+}
+.lp-q-btn:focus-visible { outline: 3px solid var(--brand); outline-offset: -3px; border-radius: 16px; }
+.lp-q-btn svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lp-q.open .lp-q-btn svg { transform: rotate(135deg); } /* the plus turns into an x */
+.lp-a {
+  display: grid;
+  grid-template-rows: 0fr; /* 0fr = closed, 1fr = open: the row animates its own height */
+  transition: grid-template-rows 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lp-q.open .lp-a { grid-template-rows: 1fr; }
+.lp-a > div { overflow: hidden; }
+.lp-a p { padding: 0 22px 20px; color: rgba(19, 34, 45, 0.78); font-size: 0.95rem; line-height: 1.6; }
+
+/* ---- footer: the dark sheet rounds over the bottom of the faq ---- */
+.lp-foot {
+  position: relative;
+  z-index: 3;
+  margin-top: -56px;
+  padding: clamp(64px, 10vh, 100px) clamp(20px, 4vw, 56px) 28px;
+  border-radius: 56px 56px 0 0;
+  background: var(--lp-bg);
+  overflow: hidden;
+  perspective: 1400px;
+}
+.lp-foot-cols {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.lp-foot-brand p { max-width: 32ch; margin-top: 14px; color: var(--lp-text); font-size: 0.92rem; }
+.lp-foot h4 { margin-bottom: 14px; color: var(--lp-accent); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.lp-foot nav { display: grid; align-content: start; gap: 10px; }
+.lp-foot nav a { display: inline-flex; align-items: center; gap: 6px; color: var(--lp-text); font-size: 0.92rem; text-decoration: none; }
+.lp-foot nav a:hover { color: var(--white); }
+.lp-foot nav svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lp-foot-word {
+  margin: clamp(40px, 8vh, 80px) auto 0;
+  max-width: 1200px;
+  font-family: var(--lp-serif);
+  font-size: clamp(64px, 17vw, 250px);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.1);
+  transform-origin: 50% 100%;
+  will-change: transform;
+  user-select: none;
+}
+.lp-foot-word span { color: rgba(211, 206, 190, 0.22); }
+.lp-foot-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1100px;
+  margin: 28px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--lp-text);
+  font-size: 0.82rem;
+}
+.lp-top { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; color: var(--lp-accent); font: inherit; font-weight: 700; cursor: pointer; }
+.lp-top svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s; }
+.lp-top:hover svg { transform: translateY(-3px); }
+.lp-foot a:focus-visible, .lp-top:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 3px; border-radius: 4px; }
+
+@media (max-width: 1000px) {
+  .lp-steps { grid-template-columns: 1fr; max-width: 520px; }
+  .lp-how-line { display: none; }
+  .lp-tech-grid { grid-template-columns: repeat(2, 1fr); }
+  .lp-foot-cols { grid-template-columns: 1fr 1fr; }
+  .lp-foot-brand { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .lp-tech-grid { grid-template-columns: 1fr; }
+  .lp-how, .lp-foot, .lp-faq-sheet { border-radius: 36px 36px 0 0; }
+  .lp-how, .lp-foot { margin-top: -36px; }
+}
 
 /* ---- animation start states: hidden until the script (motion) brings them in ---- */
 .lp-nav,
