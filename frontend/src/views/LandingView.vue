@@ -83,7 +83,7 @@ const audiences = [
         <a href="#features" @click.prevent="go('features')">Features</a>
         <a href="#roles" @click.prevent="go('roles')">Who it's for</a>
       </nav>
-      <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-lime lp-nav-cta">Sign in</RouterLink>
+      <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent lp-nav-cta">Sign in</RouterLink>
     </header>
 
     <!-- hero -->
@@ -91,7 +91,7 @@ const audiences = [
       <h1 class="lp-title">Every employee, every day, <em>in one place.</em></h1>
       <p class="lp-sub">Track employee status, attendance, leave and work without the spreadsheets.</p>
       <div class="lp-actions">
-        <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-lime">
+        <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent">
           Get started
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
         </RouterLink>
@@ -190,7 +190,7 @@ const audiences = [
           </ul>
         </article>
       </div>
-      <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-lime lp-end">
+      <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent lp-end">
         Get started
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </RouterLink>
@@ -201,24 +201,24 @@ const audiences = [
 <style>
 /* ====== landing. Everything starts with lp- so it never clashes with the app styles ====== */
 .lp {
-  --lp-bg: #101b25;
-  --lp-lime: #d8f46b;
-  --lp-lime-hover: #e7fa94;
-  --lp-on-lime: #10202b;
-  --lp-text: rgba(255, 255, 255, 0.74);
-  --lp-dark: #28353f;
-  --lp-light: #f3f6f4;
-  --lp-blue: #cfe3f5;
-  --lp-ink: #13222d;
+  --lp-bg: var(--ink);
+  --lp-accent: var(--accent); /* the same beige the login panel and sidebar use */
+  --lp-accent-hover: var(--white);
+  --lp-on-accent: var(--ink);
+  --lp-text: rgba(255, 255, 255, 0.78);
+  --lp-dark: var(--brand-dark);
+  --lp-light: var(--bg);
+  --lp-blue: var(--light-blue);
+  --lp-ink: var(--ink);
   --lp-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   min-height: 100vh;
   min-height: 100svh;
   padding-top: 14px; /* padding, not a margin on the nav: a margin would leak out and show the page background above */
   overflow-x: clip;
   background:
-    radial-gradient(1100px 520px at 50% -8%, rgba(60, 120, 190, 0.22), transparent 70%),
+    radial-gradient(1100px 520px at 50% -8%, rgba(20, 76, 140, 0.55), transparent 70%),
     var(--lp-bg);
-  color: #fff;
+  color: var(--white);
 }
 
 /* ---- buttons ---- */
@@ -227,23 +227,23 @@ const audiences = [
   padding: 12px 24px;
   font-size: 0.95rem;
 }
-.lp .lp-btn-lime {
-  background: var(--lp-lime);
-  border-color: var(--lp-lime);
-  color: var(--lp-on-lime);
+.lp .lp-btn-accent {
+  background: var(--lp-accent);
+  border-color: var(--lp-accent);
+  color: var(--lp-on-accent);
 }
-.lp .lp-btn-lime:hover {
-  background: var(--lp-lime-hover);
-  border-color: var(--lp-lime-hover);
+.lp .lp-btn-accent:hover {
+  background: var(--lp-accent-hover);
+  border-color: var(--lp-accent-hover);
 }
 .lp .lp-btn-ghost {
   background: transparent;
-  border-color: rgba(216, 244, 107, 0.55);
-  color: var(--lp-lime);
+  border-color: rgba(211, 206, 190, 0.55);
+  color: var(--lp-accent);
 }
 .lp .lp-btn-ghost:hover {
-  background: rgba(216, 244, 107, 0.12);
-  border-color: var(--lp-lime);
+  background: rgba(211, 206, 190, 0.14);
+  border-color: var(--lp-accent);
 }
 .lp .btn svg {
   transition: transform 0.2s;
@@ -253,7 +253,7 @@ const audiences = [
 }
 .lp .btn:focus-visible,
 .lp-links a:focus-visible {
-  outline: 2px solid var(--lp-lime);
+  outline: 2px solid var(--lp-accent);
   outline-offset: 3px;
 }
 
@@ -271,20 +271,20 @@ const audiences = [
   padding: 7px 7px 7px 18px;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 999px;
-  background: rgba(40, 53, 63, 0.7);
+  background: rgba(14, 58, 110, 0.55);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
 .lp .brand {
   font-size: 1.05rem;
-  color: #fff;
+  color: var(--white);
 }
 .lp .brand-logo {
   height: 28px;
   filter: brightness(0) invert(1); /* the logo is navy, so turn it white on this dark page */
 }
 .lp .brand .rise {
-  color: var(--lp-lime);
+  color: var(--lp-accent);
 }
 .lp-sep {
   width: 1px;
@@ -302,7 +302,7 @@ const audiences = [
   transition: color 0.2s;
 }
 .lp-links a:hover {
-  color: #fff;
+  color: var(--white);
 }
 .lp .lp-nav-cta {
   padding: 8px 18px;
@@ -330,7 +330,7 @@ const audiences = [
 .lp-h2 em {
   display: block; /* the accent phrase always sits on its own line */
   font-style: italic;
-  color: var(--lp-lime);
+  color: var(--lp-accent);
 }
 .lp-sub {
   max-width: 52ch;
@@ -372,7 +372,7 @@ const audiences = [
   margin-bottom: calc(var(--sink) * -1);
   padding: var(--pad);
   border-radius: 14px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 18px 40px rgba(6, 22, 42, 0.4);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 /* each tile sits on top of the one before it, so only its RIGHT edge is covered:
@@ -382,9 +382,9 @@ const audiences = [
 .lp-tile:hover {
   z-index: 5;
   transform: translateY(-8px);
-  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 26px 50px rgba(6, 22, 42, 0.5);
 }
-.t-dark { background: var(--lp-dark); color: #fff; }
+.t-dark { background: var(--lp-dark); color: var(--white); }
 .t-light { background: var(--lp-light); color: var(--lp-ink); }
 .t-blue { background: var(--lp-blue); color: var(--lp-ink); }
 
@@ -422,8 +422,8 @@ const audiences = [
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--lp-lime);
-  color: var(--lp-on-lime);
+  background: var(--lp-accent);
+  color: var(--lp-on-accent);
   font-size: 0.64rem;
   font-weight: 800;
 }
@@ -438,9 +438,9 @@ const audiences = [
   font-weight: 700;
   white-space: nowrap;
 }
-.lp-chip.ok { background: rgba(134, 209, 159, 0.2); color: #9be0b3; }
-.lp-chip.warn { background: rgba(255, 190, 90, 0.2); color: #ffc980; }
-.lp-chip.info { background: rgba(138, 185, 238, 0.22); color: #a9cdf5; }
+.lp-chip.ok { background: var(--green-soft); color: var(--green); }
+.lp-chip.warn { background: var(--amber-soft); color: var(--amber); }
+.lp-chip.info { background: var(--blue-soft); color: var(--blue); }
 
 /* attendance */
 .lp-clock { display: flex; align-items: baseline; gap: 8px; }
@@ -448,7 +448,7 @@ const audiences = [
 .lp-clock span { font-size: 0.72rem; font-weight: 600; opacity: 0.65; }
 .lp-bars { display: flex; align-items: flex-end; gap: 6px; height: clamp(76px, 7vw, 100px); }
 .lp-bars span { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; }
-.lp-bars i { width: 100%; border-radius: 6px 6px 3px 3px; background: rgba(19, 34, 45, 0.82); }
+.lp-bars i { width: 100%; border-radius: 6px 6px 3px 3px; background: var(--ink); }
 .lp-bars .today i { background: var(--brand); }
 .lp-bars em { font-style: normal; font-size: 0.6rem; font-weight: 700; opacity: 0.6; }
 
@@ -458,7 +458,7 @@ const audiences = [
   gap: 2px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #fff;
+  background: var(--white);
 }
 .lp-req b { font-size: 0.82rem; }
 .lp-req-actions { display: flex; gap: 6px; margin-top: 8px; }
@@ -469,8 +469,8 @@ const audiences = [
   font-style: normal;
   font-weight: 700;
 }
-.lp-req-actions .yes { background: var(--lp-ink); color: #fff; }
-.lp-req-actions .no { border: 1.5px solid rgba(19, 34, 45, 0.35); }
+.lp-req-actions .yes { background: var(--lp-ink); color: var(--white); }
+.lp-req-actions .no { border: 1.5px solid rgba(31, 60, 88, 0.4); }
 .lp-req.done { opacity: 0.7; }
 
 /* task board */
@@ -479,8 +479,8 @@ const audiences = [
 .lp-board em { font-style: normal; font-size: 0.6rem; font-weight: 700; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lp-board i { height: 34px; border-radius: 8px; background: rgba(255, 255, 255, 0.13); }
 .lp-board i.short { height: 24px; }
-.lp-board i.hot { background: rgba(216, 244, 107, 0.85); }
-.lp-board i.ok { background: rgba(134, 209, 159, 0.4); }
+.lp-board i.hot { background: var(--light-blue); }
+.lp-board i.ok { background: color-mix(in srgb, var(--green) 60%, transparent); }
 
 /* access */
 .lp-role {
@@ -491,7 +491,7 @@ const audiences = [
   gap: 2px 8px;
   padding: 9px 12px;
   border-radius: 10px;
-  background: #fff;
+  background: var(--white);
 }
 .lp-role b { font-size: 0.8rem; }
 .lp-role small { font-size: 0.64rem; }
@@ -503,7 +503,7 @@ const audiences = [
 .lp-stats small { font-size: 0.6rem; }
 .lp-stats b { display: block; font-family: var(--lp-serif); font-size: clamp(1.2rem, 2vw, 1.7rem); font-weight: 500; line-height: 1.1; }
 .lp-spark { display: flex; align-items: flex-end; gap: 6px; height: clamp(36px, 4.5vw, 60px); }
-.lp-spark i { flex: 1; height: var(--s); border-radius: 5px 5px 2px 2px; background: rgba(19, 34, 45, 0.78); }
+.lp-spark i { flex: 1; height: var(--s); border-radius: 5px 5px 2px 2px; background: var(--ink); }
 .lp-spark i:last-child { background: var(--brand); }
 
 /* ---- who it's for ---- */
@@ -560,7 +560,7 @@ const audiences = [
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--lp-lime);
+  background: var(--lp-accent);
 }
 
 /* ---- entrance motion ---- */
