@@ -8,7 +8,7 @@ const ready = ref(false)
 const settled = ref(false)
 onMounted(() => {
   setTimeout(() => (ready.value = true), 60)
-  setTimeout(() => (settled.value = true), 1800)
+  setTimeout(() => (settled.value = true), 2400)
 })
 
 // Smooth-scroll to a section by id. A plain <a href="#x"> would be picked up by the router
@@ -86,24 +86,25 @@ const audiences = [
       <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent lp-nav-cta">Sign in</RouterLink>
     </header>
 
-    <!-- hero -->
+    <!-- hero: a hand of cards on the left, the text on the right -->
     <section class="lp-hero">
-      <h1 class="lp-title">Every employee, every day, <em>in one place.</em></h1>
-      <p class="lp-sub">Track employee status, attendance, leave and work without the spreadsheets.</p>
-      <div class="lp-actions">
-        <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent">
-          Get started
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-        </RouterLink>
-        <a href="#roles" class="btn lp-btn lp-btn-ghost" @click.prevent="go('roles')">Learn more</a>
+      <div class="lp-copy">
+        <h1 class="lp-title">Every employee, every day, <em>in one place.</em></h1>
+        <p class="lp-sub">Track employee status, attendance, leave and work without the spreadsheets.</p>
+        <div class="lp-actions">
+          <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent">
+            Get started
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </RouterLink>
+          <a href="#roles" class="btn lp-btn lp-btn-ghost" @click.prevent="go('roles')">Learn more</a>
+        </div>
       </div>
-    </section>
 
-    <!-- the card collage: overlapping tiles, each one a tiny piece of the real app -->
-    <section id="features" class="lp-stage" aria-label="What HireRise does">
-      <ul class="lp-collage">
+      <!-- the cards: each one is a tiny piece of the real app. They start as a stack and fan out like an UNO hand -->
+      <div id="features" class="lp-fan-wrap" aria-label="What HireRise does">
+        <ul class="lp-fan">
         <!-- 1. employee records -->
-        <li class="lp-tile t-dark" style="--i: 0; --g: 1; --h: 78%; --sink: 28px">
+        <li class="lp-tile t-dark" style="--i: 0; --a: -27.5deg">
           <h3 class="lp-label">Employee records</h3>
           <div class="lp-mock" aria-hidden="true">
             <div v-for="p in people" :key="p.initials" class="lp-person">
@@ -115,7 +116,7 @@ const audiences = [
         </li>
 
         <!-- 2. live attendance -->
-        <li class="lp-tile t-light" style="--i: 1; --g: 1.1; --h: 94%; --sink: 40px">
+        <li class="lp-tile t-light" style="--i: 1; --a: -16.5deg">
           <h3 class="lp-label">Live attendance</h3>
           <div class="lp-mock" aria-hidden="true">
             <div class="lp-clock"><b>08:52</b><span>Clocked in</span></div>
@@ -129,7 +130,7 @@ const audiences = [
         </li>
 
         <!-- 3. leave approvals -->
-        <li class="lp-tile t-blue" style="--i: 2; --g: 0.95; --h: 72%; --sink: 20px">
+        <li class="lp-tile t-blue" style="--i: 2; --a: -5.5deg">
           <h3 class="lp-label">Leave approvals</h3>
           <div class="lp-mock" aria-hidden="true">
             <div class="lp-req">
@@ -143,7 +144,7 @@ const audiences = [
         </li>
 
         <!-- 4. task board -->
-        <li class="lp-tile t-dark" style="--i: 3; --g: 1.2; --h: 100%; --sink: 52px">
+        <li class="lp-tile t-dark" style="--i: 3; --a: 5.5deg">
           <h3 class="lp-label">Task board</h3>
           <div class="lp-mock" aria-hidden="true">
             <div class="lp-board">
@@ -155,7 +156,7 @@ const audiences = [
         </li>
 
         <!-- 5. role-based access -->
-        <li class="lp-tile t-light" style="--i: 4; --g: 1; --h: 86%; --sink: 36px">
+        <li class="lp-tile t-light" style="--i: 4; --a: 16.5deg">
           <h3 class="lp-label">Role-based access</h3>
           <div class="lp-mock" aria-hidden="true">
             <div v-for="r in roles" :key="r.name" class="lp-role">
@@ -165,7 +166,7 @@ const audiences = [
         </li>
 
         <!-- 6. team dashboard -->
-        <li class="lp-tile t-blue" style="--i: 5; --g: 1.1; --h: 76%; --sink: 24px">
+        <li class="lp-tile t-blue" style="--i: 5; --a: 27.5deg">
           <h3 class="lp-label">Team dashboard</h3>
           <div class="lp-mock" aria-hidden="true">
             <div class="lp-stats">
@@ -176,7 +177,8 @@ const audiences = [
             <div class="lp-spark"><i style="--s: 40%"></i><i style="--s: 62%"></i><i style="--s: 50%"></i><i style="--s: 78%"></i><i style="--s: 66%"></i><i style="--s: 92%"></i></div>
           </div>
         </li>
-      </ul>
+        </ul>
+      </div>
     </section>
 
     <!-- who it's for -->
@@ -305,18 +307,28 @@ const audiences = [
   font-size: 0.88rem;
 }
 
-/* ---- hero ---- */
+/* ---- hero: cards on the left, text on the right ---- */
 .lp-hero {
   display: grid;
-  justify-items: center;
+  grid-template-columns: minmax(0, 640px) minmax(0, 1fr);
+  grid-template-areas: "fan copy";
+  align-items: center;
+  gap: clamp(24px, 4vw, 72px);
+  max-width: 1320px;
+  min-height: calc(100svh - 86px);
+  margin: 0 auto;
+  padding: clamp(28px, 5vh, 64px) clamp(20px, 4vw, 56px) clamp(40px, 6vh, 72px);
+}
+.lp-copy {
+  grid-area: copy;
+  display: grid;
+  justify-items: start;
   gap: 22px;
-  padding: clamp(48px, 9vh, 104px) clamp(20px, 4vw, 56px) 0;
-  text-align: center;
+  text-align: left;
 }
 .lp-title {
-  max-width: 24ch;
   font-family: var(--lp-serif);
-  font-size: clamp(2.4rem, 5.6vw, 4.6rem);
+  font-size: clamp(2.2rem, 4.2vw, 3.6rem);
   font-weight: 800;
   line-height: 1.06;
   letter-spacing: -0.035em;
@@ -329,56 +341,48 @@ const audiences = [
   color: var(--lp-accent);
 }
 .lp-sub {
-  max-width: 52ch;
+  max-width: 44ch;
   color: var(--lp-text);
-  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+  font-size: clamp(0.95rem, 1.3vw, 1.1rem);
 }
 .lp-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 12px;
   margin-top: 6px;
 }
 
-/* ---- collage ---- */
-.lp-stage {
-  margin-top: clamp(44px, 7vh, 80px);
-  padding: 0 clamp(16px, 3vw, 48px);
+/* ---- the hand of cards ---- */
+/* the wrapper takes the scaled-down size, the list inside is always drawn at 640 x 440 and scaled with --k */
+.lp-fan-wrap {
+  --k: 1;
+  grid-area: fan;
+  justify-self: center;
+  width: calc(640px * var(--k));
+  height: calc(440px * var(--k));
   scroll-margin-top: 80px;
 }
-.lp-collage {
-  --pad: clamp(12px, 1.4vw, 18px); /* space inside each tile */
-  --ov: clamp(12px, 2.2vw, 34px); /* how far each tile slides under the next one */
-  display: flex;
-  align-items: flex-end;
-  max-width: 1280px;
-  height: clamp(290px, 31vw, 440px);
-  margin: 0 auto;
-  overflow: hidden; /* the tiles are cropped by the bottom edge, like they are rising into view */
+.lp-fan {
+  position: relative;
+  width: 640px;
+  height: 440px;
+  transform: scale(var(--k));
+  transform-origin: 0 0;
   list-style: none;
-  /* fade the cropped bottom into the page instead of a hard cut */
-  -webkit-mask-image: linear-gradient(180deg, #000 74%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 74%, transparent 100%);
 }
+/* every card is turned around a point below it (like a wrist), by its own angle --a */
 .lp-tile {
-  flex: var(--g) 1 0;
-  min-width: 0;
-  height: var(--h);
-  margin-bottom: calc(var(--sink) * -1);
-  padding: var(--pad);
-  border-radius: 14px;
-  box-shadow: 0 18px 40px rgba(6, 22, 42, 0.4);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-/* each tile sits on top of the one before it, so only its RIGHT edge is covered:
-   the extra padding on the right keeps the text clear of the next tile */
-.lp-tile + .lp-tile { margin-left: calc(var(--ov) * -1); }
-.lp-tile:not(:last-child) { padding-right: calc(var(--pad) + var(--ov)); }
-.lp-tile:hover {
-  z-index: 5;
-  transform: translateY(-8px);
-  box-shadow: 0 26px 50px rgba(6, 22, 42, 0.5);
+  position: absolute;
+  left: calc(50% - 115px);
+  bottom: 70px;
+  z-index: calc(var(--i) + 1);
+  width: 230px;
+  height: 320px;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: -6px 10px 26px rgba(6, 22, 42, 0.4);
+  transform-origin: 50% 140%;
+  transform: rotate(var(--a));
 }
 .t-dark { background: var(--lp-dark); color: var(--white); }
 .t-light { background: var(--lp-light); color: var(--lp-ink); }
@@ -387,7 +391,7 @@ const audiences = [
 .lp-label {
   margin-bottom: 12px;
   font-family: var(--lp-serif);
-  font-size: clamp(0.92rem, 1.15vw, 1.05rem);
+  font-size: 0.98rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.2;
@@ -576,57 +580,61 @@ const audiences = [
 .lp.in .lp-sub,
 .lp.in .lp-actions { opacity: 1; transform: none; filter: none; }
 
-/* the tiles rise one after another (their hover transform is set again once they have arrived) */
+/* the cards start stacked like a deck in one hand, then fan out one after another */
 .lp .lp-tile {
   opacity: 0;
-  transform: translateY(60px);
-  transition: opacity 0.7s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
-  transition-delay: calc(0.45s + var(--i) * 0.09s);
+  transform: rotate(0deg) translateY(calc(var(--i) * -3px));
+  transition:
+    opacity 0.4s ease calc(0.35s + var(--i) * 0.05s),
+    transform 1.1s cubic-bezier(0.22, 1.25, 0.36, 1) calc(0.55s + var(--i) * 0.07s),
+    box-shadow 0.3s ease;
 }
-.lp.in .lp-tile { opacity: 1; transform: none; }
-.lp.in .lp-tile:hover { transform: translateY(-8px); transition-delay: 0s; }
-.lp.settled .lp-tile { transition: transform 0.3s ease, box-shadow 0.3s ease; transition-delay: 0s; }
+.lp.in .lp-tile { opacity: 1; transform: rotate(var(--a)); }
+/* hover: the card slides up out of the hand, along its own direction, and comes to the front */
+.lp.in .lp-tile:hover {
+  z-index: 20;
+  transform: rotate(var(--a)) translateY(-36px);
+  box-shadow: -8px 18px 36px rgba(6, 22, 42, 0.5);
+}
+.lp.settled .lp-tile { transition: transform 0.3s ease, box-shadow 0.3s ease; }
 
 @media (prefers-reduced-motion: reduce) {
   .lp *, .lp *::before, .lp *::after { transition: none !important; animation: none !important; }
-  .lp-nav, .lp-title, .lp-sub, .lp-actions, .lp .lp-tile { opacity: 1 !important; transform: none !important; filter: none !important; }
+  .lp-nav, .lp-title, .lp-sub, .lp-actions { opacity: 1 !important; transform: none !important; filter: none !important; }
+  .lp .lp-tile { opacity: 1 !important; transform: rotate(var(--a)) !important; }
 }
 
-/* ---- tablets ---- */
+/* ---- smaller screens: the whole hand shrinks, then moves below the text ---- */
+@media (max-width: 1180px) {
+  .lp-hero { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); }
+  .lp-fan-wrap { --k: 0.875; }
+}
 @media (max-width: 1000px) {
   .lp-aud { grid-template-columns: 1fr; max-width: 560px; }
-  .lp-chip { display: none; } /* the rows get tight; the avatar and lines are enough */
 }
-
-/* ---- narrow screens: the overlapping row becomes a simple grid ---- */
-@media (max-width: 860px) {
-  .lp-collage {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    height: auto;
-    overflow: visible;
-    -webkit-mask-image: none;
-    mask-image: none;
+@media (max-width: 900px) {
+  .lp-hero {
+    grid-template-columns: 1fr;
+    grid-template-areas: "copy" "fan";
+    min-height: 0;
+    gap: 36px;
+    padding-top: 40px;
   }
-  .lp-tile,
-  .lp-tile + .lp-tile {
-    height: auto;
-    min-height: 200px;
-    margin: 0;
-  }
-  .lp-tile:not(:last-child) { padding-right: var(--pad); }
-  .lp-tile:hover,
-  .lp.in .lp-tile:hover { transform: none; }
+  .lp-copy { justify-items: center; text-align: center; }
+  .lp-actions { justify-content: center; }
+  .lp-fan-wrap { --k: 0.9; }
 }
 @media (max-width: 680px) {
   .lp-links, .lp-sep { display: none; } /* just the logo and Sign in */
   .lp-nav { padding-left: 14px; gap: 14px; }
+  .lp-fan-wrap { --k: 0.8; }
 }
-@media (max-width: 520px) {
-  .lp-collage { grid-template-columns: 1fr; }
-  .lp-chip { display: inline-block; } /* there is room again in a single column */
+@media (max-width: 540px) {
+  .lp-fan-wrap { --k: 0.66; }
   .lp-actions { width: 100%; }
   .lp-actions .btn { flex: 1 1 auto; }
+}
+@media (max-width: 440px) {
+  .lp-fan-wrap { --k: 0.54; }
 }
 </style>
