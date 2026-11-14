@@ -1,550 +1,636 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import LineIcon from '../components/LineIcon.vue'
+import { ref, onMounted } from 'vue'
 
 // "ready" flips to true right after the page shows, which starts the entrance animations
-// (the same .in class the icon "draw" animation already listens for in style.css)
+// (everything below listens for the .in class on the page wrapper)
 const ready = ref(false)
-const now = ref(new Date())
-let timer
-
+// "settled" flips a moment later, once the entrance has finished, so hover effects react instantly
+const settled = ref(false)
 onMounted(() => {
   setTimeout(() => (ready.value = true), 60)
-  timer = setInterval(() => (now.value = new Date()), 20000) // keeps the phone clock live
+  setTimeout(() => (settled.value = true), 1800)
 })
-onBeforeUnmount(() => clearInterval(timer))
 
-const timeText = computed(() => {
-  const h = now.value.getHours() % 12 || 12
-  const m = String(now.value.getMinutes()).padStart(2, '0')
-  return `${h}:${m}`
-})
-const dateText = computed(() =>
-  now.value.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-)
-
-// the nodes around the phone. "off" pushes a node closer to the phone, so the lines bulge outward like an arc.
-// (icon names come from data/icons.js)
-const leftNodes = [
-  { icon: 'users', title: 'Employee records', text: 'Every profile', off: 56 },
-  { icon: 'clock', title: 'Live attendance', text: 'Clock in and out', off: 0 },
-  { icon: 'calendar', title: 'Leave approvals', text: 'One-click decisions', off: 0 },
-  { icon: 'tasks', title: 'Task board', text: 'Work and deadlines', off: 56 },
-]
-const rightNodes = [
-  { icon: 'shield', title: 'Role-based access', text: 'Admin, HR, employee', off: 56 },
-  { icon: 'dashboard', title: 'Team dashboard', text: 'The day at a glance', off: 0 },
-  { icon: 'userCheck', title: 'Secure sign-in', text: 'Accounts made by HR', off: 56 },
-]
-
-// tilt the phone a little toward the mouse (desktop only)
-const tilt = ref({ x: 0, y: 0 })
-function onMove(e) {
-  tilt.value = {
-    x: (e.clientX / window.innerWidth - 0.5) * 2, // -1 (left edge) to 1 (right edge)
-    y: (e.clientY / window.innerHeight - 0.5) * 2,
-  }
+// Smooth-scroll to a section by id. A plain <a href="#x"> would be picked up by the router
+// (its scrollBehavior sends every navigation back to the top), so we scroll by hand instead.
+function go(id) {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
 }
+
+// the three employee statuses shown on the first card (same words the app uses)
+const people = [
+  { initials: 'AD', status: 'Active', tone: 'ok' },
+  { initials: 'MS', status: 'Probation', tone: 'warn' },
+  { initials: 'JR', status: 'On leave', tone: 'info' },
+]
+
+// weekday bars on the attendance card (heights are percentages)
+const week = [
+  { d: 'M', h: 82 },
+  { d: 'T', h: 64 },
+  { d: 'W', h: 90 },
+  { d: 'T', h: 72 },
+  { d: 'F', h: 48, today: true },
+]
+
+// who is who on the access card (matches the roles table in the README)
+const roles = [
+  { name: 'Admin', scope: 'Company-wide' },
+  { name: 'HR', scope: 'Company-wide' },
+  { name: 'Employee', scope: 'Own records only' },
+]
+
+// the "who it's for" cards
+const audiences = [
+  {
+    title: 'For HR and admins',
+    points: [
+      'A company-wide dashboard: headcount, who is in, who is on leave, what is pending',
+      'Approve or reject leave requests in one click',
+      'Employee directory, team attendance and the task board',
+    ],
+  },
+  {
+    title: 'For employees',
+    points: [
+      'A personal dashboard with your hours, leave balance and open tasks',
+      'Clock in and out, request leave and see how it was decided',
+      'You only ever see your own records and tasks',
+    ],
+  },
+  {
+    title: 'Secure by default',
+    points: [
+      'Real sign-in with hashed passwords and signed tokens',
+      'Every page and every action is limited by role',
+      'Deactivate someone and their access ends immediately',
+    ],
+  },
+]
 </script>
 
 <template>
-  <div class="lp" :class="{ in: ready }" @mousemove="onMove">
-    <!-- soft background: gradient + the big word behind the phone -->
-    <div class="lp-bg" aria-hidden="true">
-      <span class="lp-watermark">HIRERISE</span>
-    </div>
-
-    <!-- top bar -->
+  <div class="lp" :class="{ in: ready, settled }">
+    <!-- floating pill navigation -->
     <header class="lp-nav">
       <RouterLink to="/" class="brand">
         <img class="brand-logo" src="/logo.png" alt="" />
         <span>Hire<span class="rise">Rise</span></span>
       </RouterLink>
-      <RouterLink :to="{ name: 'login' }" class="btn btn-outline lp-signin">Sign in</RouterLink>
+      <i class="lp-sep" aria-hidden="true"></i>
+      <nav class="lp-links" aria-label="Page sections">
+        <a href="#features" @click.prevent="go('features')">Features</a>
+        <a href="#roles" @click.prevent="go('roles')">Who it's for</a>
+      </nav>
+      <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-lime lp-nav-cta">Sign in</RouterLink>
     </header>
 
-    <!-- headline -->
-    <section class="lp-head">
-      <span class="lp-eyebrow">HR management system</span>
-      <h1 class="lp-title">
-        <span style="--i: 0">Every employee,</span>
-        <span style="--i: 1">every day,</span>
-        <span style="--i: 2" class="lp-hl">in one place.</span>
-      </h1>
+    <!-- hero -->
+    <section class="lp-hero">
+      <h1 class="lp-title">Every employee, every day, <em>in one place.</em></h1>
       <p class="lp-sub">Track employee status, attendance, leave and work without the spreadsheets.</p>
+      <div class="lp-actions">
+        <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-lime">
+          Get started
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </RouterLink>
+        <a href="#roles" class="btn lp-btn lp-btn-ghost" @click.prevent="go('roles')">Learn more</a>
+      </div>
     </section>
 
-    <!-- the hub: phone in the middle, nodes on both sides, button underneath -->
-    <main class="lp-stage">
-      <div class="lp-hub">
-        <!-- left nodes. Each one is: icon, text, a line that draws toward the phone, and a dot on the phone's edge -->
-        <ul class="lp-nodes lp-left">
-          <li v-for="(n, i) in leftNodes" :key="n.title" class="lp-node" :style="{ '--i': i, '--off': n.off + 'px' }" :title="n.title">
-            <LineIcon :name="n.icon" />
-            <span class="lp-node-text"><b>{{ n.title }}</b><small>{{ n.text }}</small></span>
-            <i class="lp-line"></i>
-            <i class="lp-dot-end"></i>
-          </li>
-        </ul>
-
-        <div class="lp-tilt" :style="{ '--mx': tilt.x, '--my': tilt.y }">
-          <div class="lp-phone lp-float" style="--f: 0.4s">
-            <div class="lp-notch"></div>
-            <div class="lp-screen">
-              <div class="lp-date">{{ dateText }}</div>
-              <div class="lp-time">{{ timeText }}</div>
-
-              <div class="lp-hero-ic"><LineIcon name="users" /></div>
-              <p class="lp-tag">Know your people<br />Track their time<br />Grow your team</p>
-
-              <div class="lp-tiles">
-                <span class="lp-tile"><LineIcon name="clock" />Clock in</span>
-                <span class="lp-tile"><LineIcon name="calendar" />Leave</span>
-                <span class="lp-tile"><LineIcon name="tasks" />Tasks</span>
-              </div>
-
-              <div class="lp-recent">
-                <span class="lp-recent-title">Recent activity</span>
-                <div class="lp-row">
-                  <i class="lp-dot ok"></i>
-                  <span><b>Leave approved</b><small>Marco Santos · 2m ago</small></span>
-                </div>
-                <div class="lp-row">
-                  <i class="lp-dot"></i>
-                  <span><b>Clocked in 08:52</b><small>Ana Dela Cruz · today</small></span>
-                </div>
-              </div>
-              <div class="lp-home-bar"></div>
+    <!-- the card collage: overlapping tiles, each one a tiny piece of the real app -->
+    <section id="features" class="lp-stage" aria-label="What HireRise does">
+      <ul class="lp-collage">
+        <!-- 1. employee records -->
+        <li class="lp-tile t-dark" style="--i: 0; --g: 1; --h: 78%; --sink: 28px">
+          <h3 class="lp-label">Employee records</h3>
+          <div class="lp-mock" aria-hidden="true">
+            <div v-for="p in people" :key="p.initials" class="lp-person">
+              <span class="lp-avatar">{{ p.initials }}</span>
+              <span class="lp-skel"><i></i><i></i></span>
+              <span class="lp-chip" :class="p.tone">{{ p.status }}</span>
             </div>
           </div>
-        </div>
+        </li>
 
-        <!-- right nodes: the same markup, mirrored by CSS -->
-        <ul class="lp-nodes lp-right">
-          <li v-for="(n, i) in rightNodes" :key="n.title" class="lp-node" :style="{ '--i': i + 2, '--off': n.off + 'px' }" :title="n.title">
-            <LineIcon :name="n.icon" />
-            <span class="lp-node-text"><b>{{ n.title }}</b><small>{{ n.text }}</small></span>
-            <i class="lp-line"></i>
-            <i class="lp-dot-end"></i>
-          </li>
-        </ul>
+        <!-- 2. live attendance -->
+        <li class="lp-tile t-light" style="--i: 1; --g: 1.1; --h: 94%; --sink: 40px">
+          <h3 class="lp-label">Live attendance</h3>
+          <div class="lp-mock" aria-hidden="true">
+            <div class="lp-clock"><b>08:52</b><span>Clocked in</span></div>
+            <div class="lp-bars">
+              <span v-for="(w, k) in week" :key="k" :class="{ today: w.today }">
+                <i :style="{ height: w.h + '%' }"></i><em>{{ w.d }}</em>
+              </span>
+            </div>
+            <small>Late after 09:15</small>
+          </div>
+        </li>
+
+        <!-- 3. leave approvals -->
+        <li class="lp-tile t-blue" style="--i: 2; --g: 0.95; --h: 72%; --sink: 20px">
+          <h3 class="lp-label">Leave approvals</h3>
+          <div class="lp-mock" aria-hidden="true">
+            <div class="lp-req">
+              <b>Vacation</b><small>3 days · pending</small>
+              <span class="lp-req-actions"><i class="yes">Approve</i><i class="no">Reject</i></span>
+            </div>
+            <div class="lp-req done">
+              <b>Sick leave</b><small>1 day · approved</small>
+            </div>
+          </div>
+        </li>
+
+        <!-- 4. task board -->
+        <li class="lp-tile t-dark" style="--i: 3; --g: 1.2; --h: 100%; --sink: 52px">
+          <h3 class="lp-label">Task board</h3>
+          <div class="lp-mock" aria-hidden="true">
+            <div class="lp-board">
+              <span><em>To do</em><i></i><i class="short"></i></span>
+              <span><em>In progress</em><i class="hot"></i></span>
+              <span><em>Done</em><i class="ok"></i><i class="ok short"></i></span>
+            </div>
+          </div>
+        </li>
+
+        <!-- 5. role-based access -->
+        <li class="lp-tile t-light" style="--i: 4; --g: 1; --h: 86%; --sink: 36px">
+          <h3 class="lp-label">Role-based access</h3>
+          <div class="lp-mock" aria-hidden="true">
+            <div v-for="r in roles" :key="r.name" class="lp-role">
+              <b>{{ r.name }}</b><small>{{ r.scope }}</small>
+            </div>
+          </div>
+        </li>
+
+        <!-- 6. team dashboard -->
+        <li class="lp-tile t-blue" style="--i: 5; --g: 1.1; --h: 76%; --sink: 24px">
+          <h3 class="lp-label">Team dashboard</h3>
+          <div class="lp-mock" aria-hidden="true">
+            <div class="lp-stats">
+              <span><b>42</b><small>Present</small></span>
+              <span><b>3</b><small>On leave</small></span>
+              <span><b>5</b><small>Pending</small></span>
+            </div>
+            <div class="lp-spark"><i style="--s: 40%"></i><i style="--s: 62%"></i><i style="--s: 50%"></i><i style="--s: 78%"></i><i style="--s: 66%"></i><i style="--s: 92%"></i></div>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- who it's for -->
+    <section id="roles" class="lp-roles" aria-label="Who HireRise is for">
+      <h2 class="lp-h2">One system, <em>three ways in.</em></h2>
+      <div class="lp-aud">
+        <article v-for="a in audiences" :key="a.title" class="lp-card">
+          <h3>{{ a.title }}</h3>
+          <ul>
+            <li v-for="p in a.points" :key="p">{{ p }}</li>
+          </ul>
+        </article>
       </div>
-
-      <RouterLink :to="{ name: 'login' }" class="btn btn-primary lp-cta">
-        Get Started Now
-        <span class="lp-arrow" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-        </span>
+      <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-lime lp-end">
+        Get started
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </RouterLink>
-    </main>
+    </section>
   </div>
 </template>
 
 <style>
-/* ====== landing (one screen, no scrolling). Everything starts with lp- so it never clashes ====== */
+/* ====== landing. Everything starts with lp- so it never clashes with the app styles ====== */
 .lp {
-  --ph: clamp(250px, calc(100svh - 340px), 600px); /* phone height: grows and shrinks with the window */
-  --pw: calc(var(--ph) * 0.49); /* phone width */
-  position: relative;
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  height: 100vh;
-  height: 100svh;
-  overflow: hidden; /* no scrolling */
-  background: linear-gradient(180deg, #d6e5f9 0%, #e9f1fb 55%, var(--bg) 100%);
-  color: var(--ink);
-}
-.lp > header,
-.lp > section,
-.lp > main {
-  position: relative;
-  z-index: 1;
-}
-
-/* background word */
-.lp-bg {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.lp-watermark {
-  position: absolute;
-  left: 50%;
-  top: 22%;
-  transform: translateX(-50%);
-  font-size: clamp(100px, 21vw, 330px);
-  font-weight: 800;
-  letter-spacing: -0.05em;
-  line-height: 1;
-  white-space: nowrap;
-  color: rgba(255, 255, 255, 0.78);
-  animation: lp-drift 14s ease-in-out infinite alternate;
+  --lp-bg: #101b25;
+  --lp-lime: #d8f46b;
+  --lp-lime-hover: #e7fa94;
+  --lp-on-lime: #10202b;
+  --lp-text: rgba(255, 255, 255, 0.74);
+  --lp-dark: #28353f;
+  --lp-light: #f3f6f4;
+  --lp-blue: #cfe3f5;
+  --lp-ink: #13222d;
+  --lp-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-top: 14px; /* padding, not a margin on the nav: a margin would leak out and show the page background above */
+  overflow-x: clip;
+  background:
+    radial-gradient(1100px 520px at 50% -8%, rgba(60, 120, 190, 0.22), transparent 70%),
+    var(--lp-bg);
+  color: #fff;
 }
 
-/* top bar */
+/* ---- buttons ---- */
+/* (".lp" in front of each rule makes them win over the global .btn rules in style.css) */
+.lp .lp-btn {
+  padding: 12px 24px;
+  font-size: 0.95rem;
+}
+.lp .lp-btn-lime {
+  background: var(--lp-lime);
+  border-color: var(--lp-lime);
+  color: var(--lp-on-lime);
+}
+.lp .lp-btn-lime:hover {
+  background: var(--lp-lime-hover);
+  border-color: var(--lp-lime-hover);
+}
+.lp .lp-btn-ghost {
+  background: transparent;
+  border-color: rgba(216, 244, 107, 0.55);
+  color: var(--lp-lime);
+}
+.lp .lp-btn-ghost:hover {
+  background: rgba(216, 244, 107, 0.12);
+  border-color: var(--lp-lime);
+}
+.lp .btn svg {
+  transition: transform 0.2s;
+}
+.lp .btn:hover svg {
+  transform: translateX(3px);
+}
+.lp .btn:focus-visible,
+.lp-links a:focus-visible {
+  outline: 2px solid var(--lp-lime);
+  outline-offset: 3px;
+}
+
+/* ---- pill navigation ---- */
 .lp-nav {
+  position: sticky;
+  top: 14px;
+  z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px clamp(20px, 4vw, 56px);
+  gap: clamp(10px, 2vw, 22px);
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  margin: 0 auto;
+  padding: 7px 7px 7px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  background: rgba(40, 53, 63, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
-.lp .brand .rise {
-  color: var(--brand); /* the beige is for dark backgrounds, this page is light */
+.lp .brand {
+  font-size: 1.05rem;
+  color: #fff;
 }
 .lp .brand-logo {
-  height: 38px;
+  height: 28px;
+  filter: brightness(0) invert(1); /* the logo is navy, so turn it white on this dark page */
 }
-.lp-signin {
-  padding: 8px 22px;
-  background: var(--white);
-  color: var(--brand);
-  border-color: var(--brand);
+.lp .brand .rise {
+  color: var(--lp-lime);
 }
-.lp-signin:hover {
-  background: var(--brand);
-  color: var(--white);
+.lp-sep {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.lp-links {
+  display: flex;
+  gap: clamp(12px, 2vw, 22px);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.lp-links a {
+  color: rgba(255, 255, 255, 0.76);
+  transition: color 0.2s;
+}
+.lp-links a:hover {
+  color: #fff;
+}
+.lp .lp-nav-cta {
+  padding: 8px 18px;
+  font-size: 0.88rem;
 }
 
-.lp small {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--muted);
-  line-height: 1.35;
-}
-.lp b {
-  font-weight: 700;
-}
-
-/* ---- headline (centered) ---- */
-.lp-head {
+/* ---- hero ---- */
+.lp-hero {
   display: grid;
   justify-items: center;
-  gap: clamp(6px, 1.2vh, 12px);
-  padding: 0 clamp(20px, 4vw, 56px);
+  gap: 22px;
+  padding: clamp(48px, 9vh, 104px) clamp(20px, 4vw, 56px) 0;
   text-align: center;
 }
-.lp-eyebrow {
-  padding: 5px 14px;
-  border-radius: 999px;
-  background: var(--white);
-  border: 1px solid var(--line);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase; /* none | uppercase | lowercase | capitalize */
-  color: var(--brand);
-}
 .lp-title {
+  max-width: 24ch;
+  font-family: var(--lp-serif);
+  font-size: clamp(2.5rem, 6.2vw, 5rem);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.lp-title em,
+.lp-h2 em {
+  display: block; /* the accent phrase always sits on its own line */
+  font-style: italic;
+  color: var(--lp-lime);
+}
+.lp-sub {
+  max-width: 52ch;
+  color: var(--lp-text);
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+}
+.lp-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  column-gap: 0.28em;
-  font-size: clamp(1.8rem, min(3.3vw, 6vh), 3.2rem);
-  font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: -0.03em;
-}
-.lp-title span {
-  opacity: 0;
-  filter: blur(10px);
-  transform: translateY(14px);
-  transition: opacity 0.7s ease, filter 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: calc(0.1s + var(--i) * 0.14s);
-}
-.in .lp-title span {
-  opacity: 1;
-  filter: none;
-  transform: none;
-}
-.lp-hl {
-  color: var(--brand);
-}
-.lp-sub {
-  max-width: 660px;
-  color: var(--muted);
-  font-size: clamp(0.88rem, 1.3vh + 0.3rem, 1.02rem);
+  gap: 12px;
+  margin-top: 6px;
 }
 
-/* ---- the hub ---- */
+/* ---- collage ---- */
 .lp-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 16px;
-  padding: 0 clamp(12px, 3vw, 40px) clamp(12px, 2.6vh, 28px);
-  min-height: 0;
+  margin-top: clamp(44px, 7vh, 80px);
+  padding: 0 clamp(16px, 3vw, 48px);
+  scroll-margin-top: 80px;
 }
-.lp-hub {
-  position: relative; /* the nodes are placed relative to this box */
-  flex: none;
-  width: var(--pw);
-  height: var(--ph);
-}
-
-/* ---- nodes ---- */
-.lp-nodes {
-  position: absolute;
-  top: 0;
-  bottom: 0;
+.lp-collage {
+  --pad: clamp(12px, 1.4vw, 18px); /* space inside each tile */
+  --ov: clamp(12px, 2.2vw, 34px); /* how far each tile slides under the next one */
   display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  padding: 7% 0;
-  width: min(calc(50vw - var(--pw) / 2 - clamp(12px, 3vw, 40px)), 480px); /* from the page edge to the phone, max 480 */
+  align-items: flex-end;
+  max-width: 1280px;
+  height: clamp(290px, 31vw, 440px);
+  margin: 0 auto;
+  overflow: hidden; /* the tiles are cropped by the bottom edge, like they are rising into view */
   list-style: none;
-}
-.lp-left { right: 100%; } /* its right edge touches the phone's left edge */
-.lp-right { left: 100%; }
-
-.lp-node {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: var(--off, 0px); /* a bigger "off" = closer to the phone = a shorter line */
-  min-width: 0;
-}
-.lp-right .lp-node {
-  flex-direction: row-reverse; /* dot first, then the line, then text, then icon */
-  margin-left: 0;
-  margin-right: var(--off, 0px);
-  text-align: right;
-}
-.lp-node .icon-wrap {
-  flex: none;
-  width: 42px;
-  height: 42px;
-  box-shadow: 0 8px 18px rgba(20, 76, 140, 0.25);
-  transition: background 0.2s, transform 0.2s;
-}
-.lp-node .icon-wrap svg { width: 20px; height: 20px; }
-.lp-node:hover .icon-wrap { background: var(--ink); transform: scale(1.08); }
-.lp-node-text b { display: block; font-size: 0.88rem; line-height: 1.25; }
-
-/* the connecting line, drawn outward from the phone */
-.lp-line {
-  flex: 1;
-  min-width: 24px;
-  height: 2px;
-  background: linear-gradient(to left, var(--brand), rgba(20, 76, 140, 0.12)); /* strong at the phone, fading outward */
-  transform: scaleX(0);
-  transform-origin: right center;
-  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: calc(0.7s + var(--i) * 0.1s);
-}
-.lp-right .lp-line {
-  background: linear-gradient(to right, var(--brand), rgba(20, 76, 140, 0.12));
-  transform-origin: left center;
-}
-.in .lp-line { transform: scaleX(1); }
-
-/* the dot where the line meets the phone, with a ring that pulses */
-.lp-dot-end {
-  position: relative;
-  flex: none;
-  width: 10px;
-  height: 10px;
-  margin-right: -5px; /* half the dot sits on the phone's edge */
-  border-radius: 50%;
-  background: var(--brand);
-  box-shadow: 0 0 0 3px var(--white);
-}
-.lp-right .lp-dot-end { margin-right: 0; margin-left: -5px; }
-.lp-dot-end::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  border: 2px solid var(--brand);
-  opacity: 0;
-  animation: lp-ping 2.6s ease-out infinite;
-  animation-delay: calc(var(--i) * 0.35s);
-}
-.lp-node .icon-wrap,
-.lp-node-text { opacity: 0; transform: translateY(8px); transition: opacity 0.6s ease, transform 0.6s ease; transition-delay: calc(1s + var(--i) * 0.1s); }
-.in .lp-node .icon-wrap,
-.in .lp-node-text { opacity: 1; transform: none; }
-.lp-node:hover .icon-wrap { transition-delay: 0s; }
-
-/* ---- phone ---- */
-.lp-tilt {
-  position: relative;
-  z-index: 1;
-  perspective: 900px;
-}
-.lp-phone {
-  container-type: inline-size; /* lets everything inside size itself in "cqw" = % of the phone width */
-  position: relative;
-  width: var(--pw);
-  height: var(--ph);
-  flex: none;
-  padding: calc(var(--ph) * 0.016);
-  border-radius: calc(var(--ph) * 0.075);
-  background: #0a2447;
-  box-shadow: 0 30px 70px rgba(14, 58, 110, 0.35), inset 0 0 0 2px #27456f;
-  transform: rotateY(calc(var(--mx, 0) * 7deg)) rotateX(calc(var(--my, 0) * -4deg));
-  transition: transform 0.25s ease-out;
-}
-.lp-notch {
-  position: absolute;
-  top: calc(var(--ph) * 0.026);
-  left: 50%;
-  z-index: 2;
-  width: 28%;
-  height: calc(var(--ph) * 0.02);
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: #050f20;
-}
-.lp-screen {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 11cqw 7cqw 4cqw;
-  border-radius: calc(var(--ph) * 0.062);
-  background: linear-gradient(170deg, #2169b8 0%, #123f78 55%, #0a2a55 100%);
-  color: var(--white);
-  text-align: center;
-  overflow: hidden;
-}
-.lp-screen small { color: inherit; }
-.lp-date { font-size: 4.2cqw; font-weight: 600; opacity: 0.85; }
-.lp-time { font-size: 19cqw; font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; }
-.lp-hero-ic { margin: auto 0 2cqw; }
-.lp-phone .icon-wrap { width: auto; height: auto; background: transparent; box-shadow: none; }
-.lp-hero-ic .icon-wrap svg { width: 13cqw; height: 13cqw; }
-.lp-tag { font-size: 4.8cqw; font-weight: 700; line-height: 1.35; }
-
-.lp-tiles {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2.4cqw;
-  margin-top: auto;
+  /* fade the cropped bottom into the page instead of a hard cut */
+  -webkit-mask-image: linear-gradient(180deg, #000 74%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 74%, transparent 100%);
 }
 .lp-tile {
-  display: grid;
-  justify-items: center;
-  gap: 1.4cqw;
-  padding: 3cqw 1cqw;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  font-size: 3.2cqw;
-  font-weight: 700;
+  flex: var(--g) 1 0;
+  min-width: 0;
+  height: var(--h);
+  margin-bottom: calc(var(--sink) * -1);
+  padding: var(--pad);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.lp-tile .icon-wrap svg { width: 6.4cqw; height: 6.4cqw; }
+/* each tile sits on top of the one before it, so only its RIGHT edge is covered:
+   the extra padding on the right keeps the text clear of the next tile */
+.lp-tile + .lp-tile { margin-left: calc(var(--ov) * -1); }
+.lp-tile:not(:last-child) { padding-right: calc(var(--pad) + var(--ov)); }
+.lp-tile:hover {
+  z-index: 5;
+  transform: translateY(-8px);
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.45);
+}
+.t-dark { background: var(--lp-dark); color: #fff; }
+.t-light { background: var(--lp-light); color: var(--lp-ink); }
+.t-blue { background: var(--lp-blue); color: var(--lp-ink); }
 
-.lp-recent { display: grid; gap: 2cqw; margin-top: 4cqw; text-align: left; }
-.lp-recent-title { font-size: 3.3cqw; font-weight: 700; opacity: 0.85; }
-.lp-row {
+.lp-label {
+  margin-bottom: 12px;
+  font-family: var(--lp-serif);
+  font-size: clamp(0.95rem, 1.25vw, 1.15rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+.lp-tile small {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.3;
+  opacity: 0.68;
+}
+.lp-tile b { font-weight: 700; }
+.lp-mock { display: grid; gap: 10px; }
+
+/* employee rows */
+.lp-person {
   display: flex;
   align-items: center;
-  gap: 2.6cqw;
-  padding: 2.6cqw;
-  background: var(--white);
-  color: var(--ink);
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
 }
-.lp-row small { font-size: 2.8cqw; color: var(--muted); }
-.lp-row b { font-size: 3.3cqw; display: block; }
-.lp-dot {
+.lp-avatar {
   flex: none;
-  width: 6.4cqw;
-  height: 6.4cqw;
-  border-radius: 50%;
-  background: var(--light-blue);
-}
-.lp-dot.ok { background: #86d19f; }
-.lp-home-bar {
-  width: 32%;
-  height: 1.1cqw;
-  margin: 4cqw auto 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.55);
-}
-
-/* the big button */
-.lp-cta {
-  flex: none; /* never let the column squash the button */
-  position: relative;
-  overflow: hidden;
-  gap: 14px;
-  padding: 10px 12px 10px 28px;
-  font-size: 1rem;
-  box-shadow: 0 12px 28px rgba(20, 76, 140, 0.35);
-}
-.lp-arrow {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: var(--white);
-  transition: transform 0.25s;
+  background: var(--lp-lime);
+  color: var(--lp-on-lime);
+  font-size: 0.64rem;
+  font-weight: 800;
 }
-.lp .lp-arrow svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: var(--brand) !important; /* a global .btn rule would otherwise paint it white */
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.lp-skel { flex: 1; display: grid; gap: 4px; min-width: 0; }
+.lp-skel i { height: 5px; border-radius: 999px; background: rgba(255, 255, 255, 0.28); }
+.lp-skel i:last-child { width: 60%; background: rgba(255, 255, 255, 0.14); }
+.lp-chip {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
-.lp-cta:hover .lp-arrow { transform: translateX(4px); }
-.lp-cta::after { /* a light sweep that runs across the button */
+.lp-chip.ok { background: rgba(134, 209, 159, 0.2); color: #9be0b3; }
+.lp-chip.warn { background: rgba(255, 190, 90, 0.2); color: #ffc980; }
+.lp-chip.info { background: rgba(138, 185, 238, 0.22); color: #a9cdf5; }
+
+/* attendance */
+.lp-clock { display: flex; align-items: baseline; gap: 8px; }
+.lp-clock b { font-family: var(--lp-serif); font-size: clamp(1.6rem, 2.6vw, 2.2rem); font-weight: 500; line-height: 1; }
+.lp-clock span { font-size: 0.72rem; font-weight: 600; opacity: 0.65; }
+.lp-bars { display: flex; align-items: flex-end; gap: 6px; height: clamp(76px, 7vw, 100px); }
+.lp-bars span { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; }
+.lp-bars i { width: 100%; border-radius: 6px 6px 3px 3px; background: rgba(19, 34, 45, 0.82); }
+.lp-bars .today i { background: var(--brand); }
+.lp-bars em { font-style: normal; font-size: 0.6rem; font-weight: 700; opacity: 0.6; }
+
+/* leave requests */
+.lp-req {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+}
+.lp-req b { font-size: 0.82rem; }
+.lp-req-actions { display: flex; gap: 6px; margin-top: 8px; }
+.lp-req-actions i {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-style: normal;
+  font-weight: 700;
+}
+.lp-req-actions .yes { background: var(--lp-ink); color: #fff; }
+.lp-req-actions .no { border: 1.5px solid rgba(19, 34, 45, 0.35); }
+.lp-req.done { opacity: 0.7; }
+
+/* task board */
+.lp-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.lp-board span { display: grid; align-content: start; gap: 6px; min-width: 0; }
+.lp-board em { font-style: normal; font-size: 0.6rem; font-weight: 700; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-board i { height: 34px; border-radius: 8px; background: rgba(255, 255, 255, 0.13); }
+.lp-board i.short { height: 24px; }
+.lp-board i.hot { background: rgba(216, 244, 107, 0.85); }
+.lp-board i.ok { background: rgba(134, 209, 159, 0.4); }
+
+/* access */
+.lp-role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 8px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #fff;
+}
+.lp-role b { font-size: 0.8rem; }
+.lp-role small { font-size: 0.64rem; }
+
+/* dashboard */
+/* auto-fit: three boxes in a row when there is room, otherwise the last one drops to a second row (never a split word) */
+.lp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(54px, 1fr)); gap: 6px; }
+.lp-stats span { min-width: 0; padding: 8px 7px; border-radius: 10px; background: rgba(255, 255, 255, 0.7); }
+.lp-stats small { font-size: 0.6rem; }
+.lp-stats b { display: block; font-family: var(--lp-serif); font-size: clamp(1.2rem, 2vw, 1.7rem); font-weight: 500; line-height: 1.1; }
+.lp-spark { display: flex; align-items: flex-end; gap: 6px; height: clamp(36px, 4.5vw, 60px); }
+.lp-spark i { flex: 1; height: var(--s); border-radius: 5px 5px 2px 2px; background: rgba(19, 34, 45, 0.78); }
+.lp-spark i:last-child { background: var(--brand); }
+
+/* ---- who it's for ---- */
+.lp-roles {
+  display: grid;
+  justify-items: center;
+  gap: 36px;
+  padding: clamp(72px, 12vh, 130px) clamp(20px, 4vw, 56px) clamp(64px, 10vh, 110px);
+  scroll-margin-top: 20px;
+}
+.lp-h2 {
+  max-width: 16ch;
+  font-family: var(--lp-serif);
+  font-size: clamp(2rem, 4.4vw, 3.4rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-wrap: balance;
+}
+.lp-aud {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  width: 100%;
+  max-width: 1100px;
+}
+.lp-card {
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.lp-card h3 {
+  margin-bottom: 16px;
+  font-family: var(--lp-serif);
+  font-size: 1.45rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.lp-card ul { display: grid; gap: 12px; }
+.lp-card li {
+  position: relative;
+  padding-left: 22px;
+  color: var(--lp-text);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.lp-card li::before {
   content: "";
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -40%;
-  width: 30%;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
-  animation: lp-shine 4.5s ease-in-out infinite;
+  left: 0;
+  top: 0.5em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lp-lime);
 }
 
-/* ---- motion ---- */
-.lp-float { animation: lp-float-phone 6s ease-in-out infinite; animation-delay: var(--f, 0s); }
-.lp-cta, .lp-nav { opacity: 0; transition: opacity 0.7s ease 0.35s; }
-.in .lp-cta, .in .lp-nav { opacity: 1; }
-.lp-tilt { opacity: 0; transform: translateY(22px); transition: opacity 0.8s ease 0.2s, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s; }
-.in .lp-tilt { opacity: 1; transform: none; }
+/* ---- entrance motion ---- */
+.lp-nav,
+.lp-title,
+.lp-sub,
+.lp-actions {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lp-title { filter: blur(8px); transition-property: opacity, transform, filter; transition-delay: 0.1s; }
+.lp-sub { transition-delay: 0.22s; }
+.lp-actions { transition-delay: 0.34s; }
+.lp.in .lp-nav,
+.lp.in .lp-title,
+.lp.in .lp-sub,
+.lp.in .lp-actions { opacity: 1; transform: none; filter: none; }
 
-@keyframes lp-float-phone { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
-@keyframes lp-drift { from { transform: translateX(-52%); } to { transform: translateX(-48%); } }
-@keyframes lp-shine { 0%, 55% { left: -40%; } 100% { left: 140%; } }
-@keyframes lp-ping { 0% { opacity: 0.7; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(2.6); } }
+/* the tiles rise one after another (their hover transform is set again once they have arrived) */
+.lp .lp-tile {
+  opacity: 0;
+  transform: translateY(60px);
+  transition: opacity 0.7s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+  transition-delay: calc(0.45s + var(--i) * 0.09s);
+}
+.lp.in .lp-tile { opacity: 1; transform: none; }
+.lp.in .lp-tile:hover { transform: translateY(-8px); transition-delay: 0s; }
+.lp.settled .lp-tile { transition: transform 0.3s ease, box-shadow 0.3s ease; transition-delay: 0s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp *, .lp *::before, .lp *::after { animation: none !important; transition: none !important; }
-  .lp-title span, .lp-cta, .lp-nav, .lp-tilt, .lp-node .icon-wrap, .lp-node-text { opacity: 1 !important; filter: none !important; transform: none !important; }
-  .lp-line { transform: scaleX(1) !important; }
+  .lp *, .lp *::before, .lp *::after { transition: none !important; animation: none !important; }
+  .lp-nav, .lp-title, .lp-sub, .lp-actions, .lp .lp-tile { opacity: 1 !important; transform: none !important; filter: none !important; }
 }
 
-/* ---- smaller screens ---- */
+/* ---- tablets ---- */
 @media (max-width: 1000px) {
-  .lp-node-text small { display: none; } /* titles only */
-  .lp-node-text b { font-size: 0.78rem; }
-  .lp-node .icon-wrap { width: 36px; height: 36px; }
-  .lp-node .icon-wrap svg { width: 17px; height: 17px; }
-  .lp-node { gap: 8px; --off: 0px !important; }
-  .lp-nodes { width: calc(50vw - var(--pw) / 2 - 12px); }
+  .lp-aud { grid-template-columns: 1fr; max-width: 560px; }
+  .lp-chip { display: none; } /* the rows get tight; the avatar and lines are enough */
 }
 
-@media (max-width: 700px) {
-  .lp { --ph: clamp(240px, calc(100svh - 420px), 440px); }
-  .lp-title { font-size: clamp(1.7rem, 7.6vw, 2.4rem); }
-  .lp-node-text { display: none; } /* phones: icons only, no room for words */
-  .lp-node { gap: 4px; }
-  .lp-node .icon-wrap { width: 34px; height: 34px; }
-  .lp-watermark { font-size: 30vw; }
+/* ---- narrow screens: the overlapping row becomes a simple grid ---- */
+@media (max-width: 860px) {
+  .lp-collage {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    height: auto;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .lp-tile,
+  .lp-tile + .lp-tile {
+    height: auto;
+    min-height: 200px;
+    margin: 0;
+  }
+  .lp-tile:not(:last-child) { padding-right: var(--pad); }
+  .lp-tile:hover,
+  .lp.in .lp-tile:hover { transform: none; }
 }
-@media (max-width: 700px) and (max-height: 720px) {
-  .lp { --ph: clamp(220px, calc(100svh - 330px), 440px); }
-  .lp-sub, .lp-eyebrow { display: none; }
+@media (max-width: 680px) {
+  .lp-links, .lp-sep { display: none; } /* just the logo and Sign in */
+  .lp-nav { padding-left: 14px; gap: 14px; }
 }
 @media (max-width: 520px) {
-  .lp .brand-logo { height: 32px; }
-  .lp-sub { font-size: 0.88rem; }
+  .lp-collage { grid-template-columns: 1fr; }
+  .lp-chip { display: inline-block; } /* there is room again in a single column */
+  .lp-actions { width: 100%; }
+  .lp-actions .btn { flex: 1 1 auto; }
 }
 </style>
