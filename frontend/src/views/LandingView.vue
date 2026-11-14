@@ -586,17 +586,11 @@ const audiences = [
   transform: rotate(0deg) translateY(calc(var(--i) * -3px));
   transition:
     opacity 0.4s ease calc(0.35s + var(--i) * 0.05s),
-    transform 1.1s cubic-bezier(0.22, 1.25, 0.36, 1) calc(0.55s + var(--i) * 0.07s),
-    box-shadow 0.3s ease;
+    transform 1.1s cubic-bezier(0.22, 1.25, 0.36, 1) calc(0.55s + var(--i) * 0.07s);
 }
 .lp.in .lp-tile { opacity: 1; transform: rotate(var(--a)); }
-/* hover: the card slides up out of the hand, along its own direction, and comes to the front */
-.lp.in .lp-tile:hover {
-  z-index: 20;
-  transform: rotate(var(--a)) translateY(-36px);
-  box-shadow: -8px 18px 36px rgba(6, 22, 42, 0.5);
-}
-.lp.settled .lp-tile { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+/* the cards are for looking at only: no hover or click reaction */
+.lp-fan { pointer-events: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .lp *, .lp *::before, .lp *::after { transition: none !important; animation: none !important; }
