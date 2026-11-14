@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { animate, stagger } from 'motion' // motion.dev, the same library the landing page uses
+import { animate } from 'motion' // motion.dev, the same library the landing page uses
 import { useAuthStore } from '../stores/auth'
 import { errorMessage } from '../api/client'
 
@@ -14,9 +14,8 @@ const showPassword = ref(false) // the eye button flips this: password (dots) <-
 const error = ref('')
 const loading = ref(false)
 
-const sideEl = ref(null)
 const fanEl = ref(null)
-const sheetEl = ref(null)
+const cardEl = ref(null)
 
 async function submit() {
   error.value = ''
@@ -31,35 +30,33 @@ async function submit() {
   }
 }
 
-// the three little cards on the left are a sneak peek of the landing page's fan
+// the same six cards as the landing page, as a hand behind the form
 const cards = [
-  { tone: 'dark', title: 'Employee records', rows: ['AD', 'MS', 'JR'] },
-  { tone: 'light', title: 'Live attendance', big: '08:52' },
-  { tone: 'blue', title: 'Team dashboard', big: '42', small: 'Present' },
+  { tone: 'dark', title: 'Employee records', kind: 'people' },
+  { tone: 'light', title: 'Live attendance', kind: 'clock' },
+  { tone: 'blue', title: 'Leave approvals', kind: 'leave' },
+  { tone: 'dark', title: 'Task board', kind: 'board' },
+  { tone: 'light', title: 'Role-based access', kind: 'roles' },
+  { tone: 'blue', title: 'Team dashboard', kind: 'stats' },
 ]
 
 onMounted(() => {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const spring = (stiffness, damping, extra = {}) => ({ type: 'spring', stiffness, damping, ...extra })
   const tiles = [...fanEl.value.querySelectorAll('.lg-tile')]
-  const angle = (i) => (i - 1) * 12 // -12, 0, 12 degrees
+  const angle = (i) => (i - (tiles.length - 1) / 2) * 14 // 14 degrees between cards, a wider sweep than the landing page
 
   try {
     if (reduce) {
-      // reduced motion: gentle fades only
-      animate([...sideEl.value.querySelectorAll('[data-in]'), sheetEl.value], { opacity: [0, 1] }, { duration: 0.5, delay: stagger(0.08) })
-      tiles.forEach((el, i) => (el.style.transform = `rotate(${angle(i)}deg)`))
+      tiles.forEach((el, i) => (el.style.transform = `rotate(${angle(i)}deg)`)) // no motion: just the finished fan
       return
     }
-    // the white sheet slides in from the right; no fade, so it never looks see-through
-    animate(sheetEl.value, { x: [90, 0], scale: [0.96, 1] }, spring(90, 17))
-    // the text on the left rises one line after another
-    animate([...sideEl.value.querySelectorAll('[data-in]')], { opacity: [0, 1], y: [34, 0] }, spring(90, 16, { delay: stagger(0.1, { startDelay: 0.15 }) }))
-    // the cards spread out of one stack in a single spring (same motion as the landing page)
-    tiles.forEach((el, i) => animate(el, { rotate: [0, angle(i)], y: [40, 0] }, spring(70, 13, { delay: 0.35 + i * 0.08 })))
+    // the cards spread out of one stack in a single spring, nothing fades (same motion as the landing page)
+    tiles.forEach((el, i) => animate(el, { rotate: [0, angle(i)], y: [50, 0] }, spring(70, 13, { delay: 0.1 + i * 0.07 })))
+    // the form card rises from below and settles in front of them
+    animate(cardEl.value, { y: [70, 0], scale: [0.94, 1] }, spring(90, 16, { delay: 0.35 }))
   } catch (err) {
     console.warn('login animation failed, showing the page without it', err)
-    sideEl.value.querySelectorAll('[data-in]').forEach((el) => (el.style.opacity = 1))
     tiles.forEach((el, i) => (el.style.transform = `rotate(${angle(i)}deg)`))
   }
 })
@@ -67,51 +64,33 @@ onMounted(() => {
 
 <template>
   <div class="lg">
-    <!-- left: the landing theme (dark, beige accents, a peek of the card fan) -->
-    <section ref="sideEl" class="lg-side">
-      <div class="lg-top" data-in>
-        <RouterLink :to="{ name: 'landing' }" class="lg-back">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
-          Back to home
-        </RouterLink>
-      </div>
+    <!-- the hand of cards, behind everything. It is for looking at only. -->
+    <ul ref="fanEl" class="lg-fan" aria-hidden="true">
+      <li v-for="(c, i) in cards" :key="c.title" class="lg-tile" :class="'t-' + c.tone" :style="{ '--i': i }">
+        <h3>{{ c.title }}</h3>
+        <div v-if="c.kind === 'people'" class="lg-m rows"><span v-for="r in ['AD', 'MS', 'JR']" :key="r"><b>{{ r }}</b><i></i></span></div>
+        <div v-else-if="c.kind === 'clock'" class="lg-m big"><b>08:52</b><small>Clocked in</small></div>
+        <div v-else-if="c.kind === 'leave'" class="lg-m req"><b>Vacation</b><small>3 days · pending</small><em>Approve</em></div>
+        <div v-else-if="c.kind === 'board'" class="lg-m board"><span></span><span></span><span></span></div>
+        <div v-else-if="c.kind === 'roles'" class="lg-m rows"><span v-for="r in ['Admin', 'HR', 'Employee']" :key="r"><strong>{{ r }}</strong></span></div>
+        <div v-else class="lg-m big"><b>42</b><small>Present</small></div>
+      </li>
+    </ul>
 
-      <div class="lg-copy">
-        <RouterLink :to="{ name: 'landing' }" class="brand" data-in aria-label="HireRise home">
-          <img class="brand-logo" src="/logo.png" alt="" />
-          <span>Hire<span class="rise">Rise</span></span>
-        </RouterLink>
-        <h2 class="lg-title" data-in>Welcome back, <em>your team is waiting.</em></h2>
-        <p class="lg-sub" data-in>Track employee status, attendance, leave and work without the spreadsheets.</p>
-        <ul class="lg-points" data-in>
-          <li>Live headcount and attendance</li>
-          <li>Leave requests with one-click approval</li>
-          <li>Tasks and deadlines for every team</li>
-        </ul>
-      </div>
+    <header class="lg-top">
+      <RouterLink :to="{ name: 'landing' }" class="lg-back">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+        Back to home
+      </RouterLink>
+      <RouterLink :to="{ name: 'landing' }" class="brand" aria-label="HireRise home">
+        <img class="brand-logo" src="/logo.png" alt="" />
+        <span>Hire<span class="rise">Rise</span></span>
+      </RouterLink>
+      <span class="lg-top-space" aria-hidden="true"></span>
+    </header>
 
-      <ul ref="fanEl" class="lg-fan" aria-hidden="true">
-        <li v-for="(c, i) in cards" :key="c.title" class="lg-tile" :class="'t-' + c.tone" :style="{ '--i': i }">
-          <h3>{{ c.title }}</h3>
-          <div v-if="c.rows" class="lg-rows">
-            <span v-for="r in c.rows" :key="r"><b>{{ r }}</b><i></i></span>
-          </div>
-          <div v-else class="lg-big">
-            <b>{{ c.big }}</b>
-            <small v-if="c.small">{{ c.small }}</small>
-          </div>
-        </li>
-      </ul>
-    </section>
-
-    <!-- right: the form on a white sheet, like the landing page's white sections -->
-    <section class="lg-form-wrap">
-      <div ref="sheetEl" class="lg-sheet">
-        <RouterLink :to="{ name: 'landing' }" class="lg-back lg-back-mobile">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
-          Back to home
-        </RouterLink>
-
+    <main class="lg-main">
+      <div ref="cardEl" class="lg-card">
         <form class="lg-form" @submit.prevent="submit">
           <h1>Sign in</h1>
           <p class="lg-form-sub">Use the account HR created for you.</p>
@@ -140,33 +119,37 @@ onMounted(() => {
           <p class="lg-note">Forgot your password? Ask HR to reset it.</p>
         </form>
       </div>
-    </section>
+    </main>
   </div>
 </template>
 
 <style>
 /* ====== login. Everything starts with lg- so it never clashes with the app styles ====== */
 .lg {
+  --k: 1.2; /* how big the hand of cards is drawn (1 = 640px wide) */
+  position: relative;
   display: grid;
-  grid-template-columns: 1.05fr 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100vh;
   height: 100svh; /* exactly one screen: the page itself never scrolls */
-  min-height: 560px;
+  min-height: 600px;
+  overflow: hidden;
   background: var(--ink); /* the same dark slate as the landing page */
   color: var(--white);
-  overflow-x: clip;
 }
 
-/* ---- left side ---- */
-.lg-side {
+/* ---- the top row: back pill on the left, logo in the middle ---- */
+.lg-top {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  padding: 28px clamp(28px, 4.5vw, 64px) 0;
-  overflow: hidden;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 22px clamp(20px, 4vw, 56px) 0;
 }
+.lg-top-space { justify-self: end; }
 .lg-back {
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -183,99 +166,76 @@ onMounted(() => {
 .lg-back:hover { background: var(--accent); color: var(--ink); }
 .lg-back:hover svg { transform: translateX(-3px); } /* the arrow nudges left, toward "back" */
 .lg-back:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-
-.lg-copy {
-  display: grid;
-  justify-items: start;
-  gap: 18px;
-  margin: auto 0;
-  padding: 48px 0 24px;
-}
 .lg .brand { color: var(--white); }
-.lg .brand-logo { height: 34px; filter: brightness(0) invert(1); } /* the logo is navy, so turn it white on this dark side */
 .lg .brand .rise { color: var(--accent); } /* the beige is for dark backgrounds, like the landing nav */
-.lg-title {
-  max-width: 14ch;
-  font-size: clamp(2.2rem, 4vw, 3.5rem);
-  font-weight: 800;
-  line-height: 1.06;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
-}
-.lg-title em { display: block; font-style: normal; color: var(--accent); }
-.lg-sub { max-width: 40ch; color: rgba(255, 255, 255, 0.78); }
-.lg-points { display: grid; gap: 10px; margin-top: 8px; font-weight: 600; }
-.lg-points li { display: flex; align-items: center; gap: 12px; color: rgba(255, 255, 255, 0.9); }
-.lg-points li::before { /* a small beige dot instead of a character */
-  content: "";
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.lg [data-in] { opacity: 0; } /* hidden until the script brings them in */
+.lg .brand-logo { height: 32px; filter: brightness(0) invert(1); } /* the logo is navy, so turn it white on this dark page */
 
-/* the hand of three cards, cut off by the bottom edge like the landing page */
+/* ---- the hand of cards: centred at the bottom, cut off by the screen edge ---- */
 .lg-fan {
-  position: relative;
-  flex: none;
-  width: 100%;
-  height: clamp(140px, 24svh, 230px); /* shorter screens just crop the cards a little more */
-  margin-top: auto;
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: -40px;
+  width: 640px;
+  height: 440px;
   list-style: none;
   pointer-events: none;
+  transform: translateX(-50%) scale(var(--k));
+  transform-origin: 50% 100%;
 }
 .lg-tile {
   position: absolute;
-  left: calc(50% - 110px);
-  top: 24px;
+  left: calc(50% - 115px);
+  bottom: 70px;
   z-index: calc(var(--i) + 1);
-  width: 220px;
+  width: 230px;
   height: 320px;
   padding: 16px;
-  border-radius: 14px;
+  border-radius: 16px;
   box-shadow: -6px 10px 26px rgba(6, 22, 42, 0.4);
-  transform-origin: 50% 160%; /* turn around a point below the card, like a wrist */
-  transform: rotate(calc((var(--i) - 1) * 12deg)); /* final angle, so it is right even before the script runs */
+  transform-origin: 50% 140%; /* turn around a point below the card, like a wrist */
+  transform: rotate(calc((var(--i) - 2.5) * 14deg)); /* the final angle, so it is right even before the script runs */
 }
 .lg-tile.t-dark { background: var(--brand-dark); color: var(--white); }
 .lg-tile.t-light { background: var(--bg); color: var(--ink); }
 .lg-tile.t-blue { background: var(--light-blue); color: var(--ink); }
-.lg-tile h3 { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; }
-.lg-rows { display: grid; gap: 8px; margin-top: 12px; }
-.lg-rows span { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); }
-.lg-rows b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--ink); font-size: 0.6rem; font-weight: 800; }
-.lg-rows i { flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.2); }
-.lg-big { display: grid; margin-top: 10px; }
-.lg-big b { font-size: 3rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; }
-.lg-big small { font-size: 0.75rem; font-weight: 600; opacity: 0.7; }
+.lg-tile h3 { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; }
+.lg-m { margin-top: 12px; }
+.lg-m.rows { display: grid; gap: 8px; }
+.lg-m.rows span { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 10px; background: rgba(127, 150, 180, 0.2); }
+.lg-m.rows b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--ink); font-size: 0.62rem; font-weight: 800; }
+.lg-m.rows i { flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.22); }
+.lg-m.rows strong { padding: 2px 6px; font-size: 0.85rem; font-weight: 700; }
+.lg-m.big { display: grid; }
+.lg-m.big b { font-size: 3rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; }
+.lg-m.big small { font-size: 0.78rem; font-weight: 600; opacity: 0.7; }
+.lg-m.req { display: grid; gap: 4px; padding: 12px; border-radius: 12px; background: var(--white); }
+.lg-m.req small { font-size: 0.72rem; opacity: 0.7; }
+.lg-m.req em { justify-self: start; margin-top: 6px; padding: 5px 12px; border-radius: 999px; background: var(--ink); color: var(--white); font-size: 0.7rem; font-style: normal; font-weight: 700; }
+.lg-m.board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.lg-m.board span { height: 120px; border-radius: 10px; background: rgba(255, 255, 255, 0.1); }
 
-/* ---- right side: a white sheet ---- */
-.lg-form-wrap {
+/* ---- the form card, in the middle, in front of the cards ---- */
+.lg-main {
+  position: relative;
+  z-index: 2;
   display: grid;
   place-items: center;
   min-height: 0;
-  padding: 24px clamp(20px, 4vw, 64px) 24px 0;
+  padding: 16px 20px 28px;
   overflow-y: auto; /* only if the screen is too short for the card */
 }
-.lg-sheet {
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 18px;
-  width: min(500px, 100%);
-  padding: clamp(32px, 4vw, 52px) clamp(24px, 4vw, 48px);
-  border-radius: 32px;
+.lg-card {
+  width: min(440px, 100%);
+  padding: clamp(28px, 4vw, 44px);
+  border-radius: 28px;
   background: var(--white);
   color: var(--ink);
-  box-shadow: 0 30px 70px rgba(6, 22, 42, 0.35);
+  box-shadow: 0 30px 80px rgba(6, 22, 42, 0.55);
   will-change: transform;
 }
-.lg-back-mobile { display: none; }
-.lg-form { width: min(380px, 100%); }
-.lg-form h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; }
-.lg-form-sub { margin: 8px 0 26px; color: var(--muted); }
+.lg-form h1 { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.03em; }
+.lg-form-sub { margin: 8px 0 24px; color: var(--muted); }
 .lg-pw { position: relative; }
 .lg-pw input { width: 100%; padding-right: 48px; }
 .lg-eye {
@@ -308,20 +268,18 @@ onMounted(() => {
   color: var(--white);
 }
 .lg .btn.lg-submit:hover:not(:disabled) { background: var(--brand); border-color: var(--brand); }
-.lg-note { margin-top: 22px; font-size: 0.84rem; color: var(--muted); text-align: center; }
+.lg-note { margin-top: 20px; font-size: 0.84rem; color: var(--muted); text-align: center; }
 
-/* ---- phones and tablets: one column, the sheet comes up under a short header ---- */
-@media (max-width: 900px) {
-  .lg { grid-template-columns: 1fr; align-content: start; height: auto; min-height: 100svh; } /* rows hug their content instead of splitting the screen */
-  .lg-side { padding: 22px 22px 0; }
-  .lg-top, .lg-points, .lg-fan, .lg-sub { display: none; } /* the sheet has its own back button below */
-  .lg-copy { margin: 0; padding: 20px 0 28px; gap: 10px; }
-  .lg-title { max-width: none; font-size: 1.9rem; }
-  .lg-form-wrap { padding: 0 12px 12px; overflow: visible; }
-  .lg-sheet { width: 100%; align-content: start; padding: 28px 22px 36px; border-radius: 32px; }
-  .lg-back-mobile { display: inline-flex; justify-self: start; color: var(--brand); border-color: rgba(20, 76, 140, 0.3); }
-  .lg-back-mobile:hover { background: var(--brand); color: var(--white); }
+/* ---- smaller screens: the hand shrinks ---- */
+@media (max-width: 1100px) { .lg { --k: 1; } }
+@media (max-width: 700px) {
+  .lg { --k: 0.8; min-height: 640px; }
+  .lg-top { grid-template-columns: auto 1fr; gap: 12px; padding: 16px 16px 0; }
+  .lg-top .brand { justify-self: end; }
+  .lg-top-space { display: none; }
+  .lg-fan { bottom: -190px; }
 }
+@media (max-height: 760px) { .lg-fan { bottom: -130px; } } /* shorter screens: sink the cards so the form has room */
 @media (prefers-reduced-motion: reduce) {
   .lg *, .lg *::before, .lg *::after { transition: none !important; }
 }
