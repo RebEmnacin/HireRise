@@ -159,18 +159,6 @@ onMounted(() => {
 .lg .brand-logo { height: 32px; filter: brightness(0) invert(1); } /* the logo is navy, so turn it white on this dark page */
 
 /* ---- the hand of cards: centred at the bottom, cut off by the screen edge ---- */
-.lg-fan {
-  position: absolute;
-  z-index: 1;
-  left: 50%;
-  bottom: -40px;
-  width: 640px;
-  height: 440px;
-  list-style: none;
-  pointer-events: none;
-  transform: translateX(-50%) scale(var(--k));
-  transform-origin: 50% 100%;
-}
 .lg-tile {
   position: absolute;
   left: calc(50% - 115px);
