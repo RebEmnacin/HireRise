@@ -16,7 +16,7 @@ onMounted(() => {
   const angle = (i) => (i - (tiles.length - 1) / 2) * 11 // the fan: 11 degrees between cards
   const spring = (stiffness, damping, extra = {}) => ({ type: 'spring', stiffness, damping, ...extra })
 
-  // used when animation is off (or anything goes wrong): everything simply appears in its final place
+  // safety net: if the animation code ever throws, everything simply appears in its final place
   function showEverything() {
     navEl.value.style.opacity = 1
     ;[...copyEl.value.children].forEach((el) => (el.style.opacity = 1))
@@ -28,30 +28,38 @@ onMounted(() => {
     rolesEl.value.querySelectorAll('[data-r]').forEach((el) => (el.style.opacity = 1))
   }
 
-  if (reduce) return showEverything()
+  // "reduced motion" is an operating-system setting (on Windows: Settings > Accessibility > Visual effects >
+  // Animation effects). When it is on, we keep things gentle: quick fades and a plain, non-bouncy fan-out,
+  // no parallax. It is never fully switched off, so the page still feels alive.
+  const gentle = { duration: 0.6, ease: 'easeOut' }
 
   try {
     // 1. the pill drops in, then the headline, text and buttons rise one after another
-    animate(navEl.value, { opacity: [0, 1], y: [-24, 0] }, spring(180, 20))
+    animate(navEl.value, reduce ? { opacity: [0, 1] } : { opacity: [0, 1], y: [-24, 0] }, reduce ? gentle : spring(180, 20))
     animate(
       [...copyEl.value.children],
-      { opacity: [0, 1], y: [34, 0] },
-      spring(140, 20, { delay: stagger(0.12, { startDelay: 0.15 }) }),
+      reduce ? { opacity: [0, 1] } : { opacity: [0, 1], y: [40, 0] },
+      reduce
+        ? { ...gentle, delay: stagger(0.1, { startDelay: 0.1 }) }
+        : spring(90, 16, { delay: stagger(0.16, { startDelay: 0.2 }) }),
     )
 
-    // 2. the cards start as one stack and spring out into a fan, each a little after the last
+    // 2. the cards are dealt onto one stack, hold for a beat, then spring out into a fan
     tiles.forEach((el, i) => {
-      animate(
-        el,
-        { opacity: [0, 1], rotate: [0, angle(i)], y: [i * -3, 0] },
-        spring(70, 10, { delay: 0.5 + i * 0.08 }),
-      )
+      if (reduce) {
+        animate(el, { opacity: [0, 1], rotate: [angle(i) * 0.4, angle(i)] }, { ...gentle, duration: 0.8, delay: 0.3 + i * 0.05 })
+        return
+      }
+      animate(el, { opacity: [0, 1], y: [90, i * -3] }, spring(120, 17, { delay: 0.15 + i * 0.09 }))
+      animate(el, { rotate: angle(i), y: 0 }, spring(46, 8, { delay: 1.35 + i * 0.07 }))
     })
 
     // 3. scrolling away: the text drifts up and fades, the hand sinks into the page below
-    const heroRange = { target: heroEl.value, offset: ['start start', 'end start'] }
-    stops.push(scroll(animate(copyEl.value, { y: [0, -70], opacity: [1, 0.15] }, { ease: 'linear' }), heroRange))
-    stops.push(scroll(animate(panEl.value, { y: [0, 90] }, { ease: 'linear' }), heroRange))
+    if (!reduce) {
+      const heroRange = { target: heroEl.value, offset: ['start start', 'end start'] }
+      stops.push(scroll(animate(copyEl.value, { y: [0, -70], opacity: [1, 0.15] }, { ease: 'linear' }), heroRange))
+      stops.push(scroll(animate(panEl.value, { y: [0, 90] }, { ease: 'linear' }), heroRange))
+    }
 
     // 4. the next section: a white sheet grows to full width as it scrolls in (--p goes 0 to 1),
     //    and its content springs up once the sheet is mostly there
@@ -60,8 +68,8 @@ onMounted(() => {
       revealed = true
       animate(
         rolesEl.value.querySelectorAll('[data-r]'),
-        { opacity: [0, 1], y: [40, 0] },
-        spring(110, 18, { delay: stagger(0.1) }),
+        reduce ? { opacity: [0, 1] } : { opacity: [0, 1], y: [40, 0] },
+        reduce ? { ...gentle, delay: stagger(0.08) } : spring(110, 18, { delay: stagger(0.1) }),
       )
     }
     stops.push(
@@ -393,14 +401,15 @@ const audiences = [
   display: grid;
   grid-template-columns: calc(640px * var(--k)) minmax(0, 1fr);
   grid-template-areas: "fan copy";
-  align-items: center;
+  align-items: end; /* the text and the cards both sit on the bottom edge of the hero */
   gap: 32px;
-  min-height: calc(100svh - 86px);
+  max-width: 1440px; /* on very wide screens the hero stays centred instead of stretching to both edges */
   margin: 0 auto;
-  padding: clamp(28px, 5vh, 64px) 32px 0; /* no bottom padding: the cards run into the bottom edge and are cut off by it */
+  padding: clamp(48px, 8vh, 88px) 32px 0; /* no bottom padding: the cards run into the bottom edge and are cut off by it */
 }
 .lp-copy {
   grid-area: copy;
+  padding-bottom: clamp(48px, 9vh, 96px); /* keeps the text clear of the edge the cards are cut off at */
   display: grid;
   justify-items: start;
   gap: 22px;
@@ -437,9 +446,8 @@ const audiences = [
    The list inside is always drawn at 640 x 440 and scaled with --k. */
 .lp-fan-wrap {
   grid-area: fan;
-  align-self: end;
   width: calc(640px * var(--k));
-  height: calc(215px * var(--k));
+  height: calc(235px * var(--k));
   overflow: hidden;
   scroll-margin-top: 80px;
 }
@@ -681,11 +689,10 @@ const audiences = [
     grid-template-columns: 1fr;
     grid-template-areas: "copy" "fan";
     justify-items: center;
-    min-height: 0;
     gap: 36px;
     padding: 40px 20px 0;
   }
-  .lp-copy { justify-items: center; text-align: center; }
+  .lp-copy { justify-items: center; text-align: center; padding-bottom: 0; }
   .lp-actions { justify-content: center; }
 }
 @media (max-width: 680px) {
