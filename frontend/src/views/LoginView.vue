@@ -47,7 +47,7 @@ onMounted(() => {
   try {
     if (reduce) {
       // reduced motion: gentle fades only
-      animate([...sideEl.value.children, sheetEl.value], { opacity: [0, 1] }, { duration: 0.5, delay: stagger(0.08) })
+      animate([...sideEl.value.querySelectorAll('[data-in]'), sheetEl.value], { opacity: [0, 1] }, { duration: 0.5, delay: stagger(0.08) })
       tiles.forEach((el, i) => (el.style.transform = `rotate(${angle(i)}deg)`))
       return
     }
@@ -149,8 +149,9 @@ onMounted(() => {
 .lg {
   display: grid;
   grid-template-columns: 1.05fr 1fr;
-  min-height: 100vh;
-  min-height: 100svh;
+  height: 100vh;
+  height: 100svh; /* exactly one screen: the page itself never scrolls */
+  min-height: 560px;
   background: var(--ink); /* the same dark slate as the landing page */
   color: var(--white);
   overflow-x: clip;
@@ -161,6 +162,7 @@ onMounted(() => {
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   padding: 28px clamp(28px, 4.5vw, 64px) 0;
   overflow: hidden;
 }
@@ -219,7 +221,7 @@ onMounted(() => {
   position: relative;
   flex: none;
   width: 100%;
-  height: 230px;
+  height: clamp(140px, 24svh, 230px); /* shorter screens just crop the cards a little more */
   margin-top: auto;
   list-style: none;
   pointer-events: none;
@@ -253,17 +255,18 @@ onMounted(() => {
 .lg-form-wrap {
   display: grid;
   place-items: center;
-  padding: 20px 20px 20px 0;
+  min-height: 0;
+  padding: 24px clamp(20px, 4vw, 64px) 24px 0;
+  overflow-y: auto; /* only if the screen is too short for the card */
 }
 .lg-sheet {
   display: grid;
   align-content: center;
   justify-items: center;
   gap: 18px;
-  width: 100%;
-  min-height: calc(100svh - 40px);
-  padding: clamp(32px, 6vw, 72px) clamp(20px, 4vw, 56px);
-  border-radius: 40px;
+  width: min(500px, 100%);
+  padding: clamp(32px, 4vw, 52px) clamp(24px, 4vw, 48px);
+  border-radius: 32px;
   background: var(--white);
   color: var(--ink);
   box-shadow: 0 30px 70px rgba(6, 22, 42, 0.35);
@@ -309,13 +312,13 @@ onMounted(() => {
 
 /* ---- phones and tablets: one column, the sheet comes up under a short header ---- */
 @media (max-width: 900px) {
-  .lg { grid-template-columns: 1fr; align-content: start; } /* rows hug their content instead of splitting the screen */
+  .lg { grid-template-columns: 1fr; align-content: start; height: auto; min-height: 100svh; } /* rows hug their content instead of splitting the screen */
   .lg-side { padding: 22px 22px 0; }
   .lg-top, .lg-points, .lg-fan, .lg-sub { display: none; } /* the sheet has its own back button below */
   .lg-copy { margin: 0; padding: 20px 0 28px; gap: 10px; }
   .lg-title { max-width: none; font-size: 1.9rem; }
-  .lg-form-wrap { padding: 0 12px 12px; }
-  .lg-sheet { min-height: 0; align-content: start; padding: 28px 22px 36px; border-radius: 32px; }
+  .lg-form-wrap { padding: 0 12px 12px; overflow: visible; }
+  .lg-sheet { width: 100%; align-content: start; padding: 28px 22px 36px; border-radius: 32px; }
   .lg-back-mobile { display: inline-flex; justify-self: start; color: var(--brand); border-color: rgba(20, 76, 140, 0.3); }
   .lg-back-mobile:hover { background: var(--brand); color: var(--white); }
 }
