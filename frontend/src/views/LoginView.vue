@@ -170,51 +170,6 @@ onMounted(() => {
 .lg .brand .rise { color: var(--accent); } /* the beige is for dark backgrounds, like the landing nav */
 .lg .brand-logo { height: 32px; filter: brightness(0) invert(1); } /* the logo is navy, so turn it white on this dark page */
 
-/* ---- the hand of cards: centred at the bottom, cut off by the screen edge ---- */
-.lg-fan {
-  position: absolute;
-  z-index: 1;
-  left: 50%;
-  bottom: -40px;
-  width: 640px;
-  height: 440px;
-  list-style: none;
-  pointer-events: none;
-  transform: translateX(-50%) scale(var(--k));
-  transform-origin: 50% 100%;
-}
-.lg-tile {
-  position: absolute;
-  left: calc(50% - 115px);
-  bottom: 70px;
-  z-index: calc(var(--i) + 1);
-  width: 230px;
-  height: 320px;
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: -6px 10px 26px rgba(6, 22, 42, 0.4);
-  transform-origin: 50% 140%; /* turn around a point below the card, like a wrist */
-  transform: rotate(calc((var(--i) - 2.5) * 14deg)); /* the final angle, so it is right even before the script runs */
-}
-.lg-tile.t-dark { background: var(--brand-dark); color: var(--white); }
-.lg-tile.t-light { background: var(--bg); color: var(--ink); }
-.lg-tile.t-blue { background: var(--light-blue); color: var(--ink); }
-.lg-tile h3 { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; }
-.lg-m { margin-top: 12px; }
-.lg-m.rows { display: grid; gap: 8px; }
-.lg-m.rows span { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 10px; background: rgba(127, 150, 180, 0.2); }
-.lg-m.rows b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--ink); font-size: 0.62rem; font-weight: 800; }
-.lg-m.rows i { flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.22); }
-.lg-m.rows strong { padding: 2px 6px; font-size: 0.85rem; font-weight: 700; }
-.lg-m.big { display: grid; }
-.lg-m.big b { font-size: 3rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; }
-.lg-m.big small { font-size: 0.78rem; font-weight: 600; opacity: 0.7; }
-.lg-m.req { display: grid; gap: 4px; padding: 12px; border-radius: 12px; background: var(--white); }
-.lg-m.req small { font-size: 0.72rem; opacity: 0.7; }
-.lg-m.req em { justify-self: start; margin-top: 6px; padding: 5px 12px; border-radius: 999px; background: var(--ink); color: var(--white); font-size: 0.7rem; font-style: normal; font-weight: 700; }
-.lg-m.board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.lg-m.board span { height: 120px; border-radius: 10px; background: rgba(255, 255, 255, 0.1); }
-
 /* ---- the form card, in the middle, in front of the cards ---- */
 .lg-main {
   position: relative;
