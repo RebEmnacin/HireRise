@@ -21,7 +21,6 @@ onMounted(() => {
     navEl.value.style.opacity = 1
     ;[...copyEl.value.children].forEach((el) => (el.style.opacity = 1))
     tiles.forEach((el, i) => {
-      el.style.opacity = 1
       el.style.transform = `rotate(${angle(i)}deg)`
     })
     rolesEl.value.style.setProperty('--p', 1)
@@ -44,20 +43,15 @@ onMounted(() => {
         : spring(90, 16, { delay: stagger(0.16, { startDelay: 0.2 }) }),
     )
 
-    // 2. the cards spread out of one stack in a single smooth motion (no pause, no second step).
-    //    Each card starts upright and slightly lower, then one spring swings it out to its place in the fan.
-    //    Only the fade is quick, so the cards are already moving by the time you can see them.
+    // 2. the cards start as one stack and spread into the fan in a single spring. There is no fade at all:
+    //    the cards are solid from the first frame, only their angle and position change.
     tiles.forEach((el, i) => {
-      const delay = 0.2 + i * 0.07
+      const delay = 0.15 + i * 0.06
       if (reduce) {
-        animate(el, { opacity: [0, 1], rotate: [angle(i) * 0.4, angle(i)] }, { ...gentle, duration: 0.8, delay })
+        animate(el, { rotate: [angle(i) * 0.4, angle(i)] }, { ...gentle, duration: 0.8, delay })
         return
       }
-      animate(
-        el,
-        { opacity: [0, 1], rotate: [0, angle(i)], y: [60, 0] },
-        { default: spring(70, 13, { delay }), opacity: { duration: 0.15, delay } },
-      )
+      animate(el, { rotate: [0, angle(i)], y: [40, 0] }, spring(70, 13, { delay }))
     })
 
     // 3. scrolling away: the text drifts up and fades, the hand sinks into the page below
@@ -677,7 +671,6 @@ const audiences = [
 /* ---- animation start states: hidden until the script (motion) brings them in ---- */
 .lp-nav,
 .lp-copy > *,
-.lp-tile,
 .lp [data-r] {
   opacity: 0;
 }
