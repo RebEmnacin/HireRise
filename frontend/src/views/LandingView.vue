@@ -1,15 +1,93 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { animate, scroll, stagger, press } from 'motion' // motion.dev: springs, staggering and scroll-linked animation
 
-// "ready" flips to true right after the page shows, which starts the entrance animations
-// (everything below listens for the .in class on the page wrapper)
-const ready = ref(false)
-// "settled" flips a moment later, once the entrance has finished, so hover effects react instantly
-const settled = ref(false)
+const navEl = ref(null)
+const heroEl = ref(null)
+const copyEl = ref(null)
+const fanEl = ref(null)
+const panEl = ref(null)
+const rolesEl = ref(null)
+const stops = [] // the scroll / press listeners, switched off when the page is left
+
 onMounted(() => {
-  setTimeout(() => (ready.value = true), 60)
-  setTimeout(() => (settled.value = true), 2400)
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const tiles = [...fanEl.value.querySelectorAll('.lp-tile')]
+  const angle = (i) => (i - (tiles.length - 1) / 2) * 11 // the fan: 11 degrees between cards
+  const spring = (stiffness, damping, extra = {}) => ({ type: 'spring', stiffness, damping, ...extra })
+
+  // used when animation is off (or anything goes wrong): everything simply appears in its final place
+  function showEverything() {
+    navEl.value.style.opacity = 1
+    ;[...copyEl.value.children].forEach((el) => (el.style.opacity = 1))
+    tiles.forEach((el, i) => {
+      el.style.opacity = 1
+      el.style.transform = `rotate(${angle(i)}deg)`
+    })
+    rolesEl.value.style.setProperty('--p', 1)
+    rolesEl.value.querySelectorAll('[data-r]').forEach((el) => (el.style.opacity = 1))
+  }
+
+  if (reduce) return showEverything()
+
+  try {
+    // 1. the pill drops in, then the headline, text and buttons rise one after another
+    animate(navEl.value, { opacity: [0, 1], y: [-24, 0] }, spring(180, 20))
+    animate(
+      [...copyEl.value.children],
+      { opacity: [0, 1], y: [34, 0] },
+      spring(140, 20, { delay: stagger(0.12, { startDelay: 0.15 }) }),
+    )
+
+    // 2. the cards start as one stack and spring out into a fan, each a little after the last
+    tiles.forEach((el, i) => {
+      animate(
+        el,
+        { opacity: [0, 1], rotate: [0, angle(i)], y: [i * -3, 0] },
+        spring(70, 10, { delay: 0.5 + i * 0.08 }),
+      )
+    })
+
+    // 3. scrolling away: the text drifts up and fades, the hand sinks into the page below
+    const heroRange = { target: heroEl.value, offset: ['start start', 'end start'] }
+    stops.push(scroll(animate(copyEl.value, { y: [0, -70], opacity: [1, 0.15] }, { ease: 'linear' }), heroRange))
+    stops.push(scroll(animate(panEl.value, { y: [0, 90] }, { ease: 'linear' }), heroRange))
+
+    // 4. the next section: a white sheet grows to full width as it scrolls in (--p goes 0 to 1),
+    //    and its content springs up once the sheet is mostly there
+    let revealed = false
+    const reveal = () => {
+      revealed = true
+      animate(
+        rolesEl.value.querySelectorAll('[data-r]'),
+        { opacity: [0, 1], y: [40, 0] },
+        spring(110, 18, { delay: stagger(0.1) }),
+      )
+    }
+    stops.push(
+      scroll(
+        (p) => {
+          rolesEl.value.style.setProperty('--p', p)
+          if (p > 0.45 && !revealed) reveal()
+        },
+        { target: rolesEl.value, offset: ['start end', 'start 0.3'] },
+      ),
+    )
+
+    // 5. buttons squash a little while pressed
+    stops.push(
+      press('.lp .btn', (el) => {
+        animate(el, { scale: 0.95 }, spring(500, 30))
+        return () => animate(el, { scale: 1 }, spring(500, 22))
+      }),
+    )
+  } catch (err) {
+    console.warn('landing animation failed, showing the page without it', err)
+    showEverything()
+  }
 })
+
+onBeforeUnmount(() => stops.forEach((stop) => typeof stop === 'function' && stop()))
 
 // Smooth-scroll to a section by id. A plain <a href="#x"> would be picked up by the router
 // (its scrollBehavior sends every navigation back to the top), so we scroll by hand instead.
@@ -71,9 +149,9 @@ const audiences = [
 </script>
 
 <template>
-  <div class="lp" :class="{ in: ready, settled }">
+  <div class="lp">
     <!-- floating pill navigation -->
-    <header class="lp-nav">
+    <header ref="navEl" class="lp-nav">
       <RouterLink to="/" class="brand">
         <img class="brand-logo" src="/logo.png" alt="" />
         <span>Hire<span class="rise">Rise</span></span>
@@ -87,8 +165,8 @@ const audiences = [
     </header>
 
     <!-- hero: a hand of cards on the left, the text on the right -->
-    <section class="lp-hero">
-      <div class="lp-copy">
+    <section ref="heroEl" class="lp-hero">
+      <div ref="copyEl" class="lp-copy">
         <h1 class="lp-title">Every employee, every day, <em>in one place.</em></h1>
         <p class="lp-sub">Track employee status, attendance, leave and work without the spreadsheets.</p>
         <div class="lp-actions">
@@ -102,9 +180,10 @@ const audiences = [
 
       <!-- the cards: each one is a tiny piece of the real app. They start as a stack and fan out like an UNO hand -->
       <div id="features" class="lp-fan-wrap" aria-label="What HireRise does">
-        <ul class="lp-fan">
+        <div ref="panEl" class="lp-fan-pan">
+        <ul ref="fanEl" class="lp-fan">
         <!-- 1. employee records -->
-        <li class="lp-tile t-dark" style="--i: 0; --a: -27.5deg">
+        <li class="lp-tile t-dark" style="--i: 0">
           <h3 class="lp-label">Employee records</h3>
           <div class="lp-mock" aria-hidden="true">
             <div v-for="p in people" :key="p.initials" class="lp-person">
@@ -116,7 +195,7 @@ const audiences = [
         </li>
 
         <!-- 2. live attendance -->
-        <li class="lp-tile t-light" style="--i: 1; --a: -16.5deg">
+        <li class="lp-tile t-light" style="--i: 1">
           <h3 class="lp-label">Live attendance</h3>
           <div class="lp-mock" aria-hidden="true">
             <div class="lp-clock"><b>08:52</b><span>Clocked in</span></div>
@@ -130,7 +209,7 @@ const audiences = [
         </li>
 
         <!-- 3. leave approvals -->
-        <li class="lp-tile t-blue" style="--i: 2; --a: -5.5deg">
+        <li class="lp-tile t-blue" style="--i: 2">
           <h3 class="lp-label">Leave approvals</h3>
           <div class="lp-mock" aria-hidden="true">
             <div class="lp-req">
@@ -144,7 +223,7 @@ const audiences = [
         </li>
 
         <!-- 4. task board -->
-        <li class="lp-tile t-dark" style="--i: 3; --a: 5.5deg">
+        <li class="lp-tile t-dark" style="--i: 3">
           <h3 class="lp-label">Task board</h3>
           <div class="lp-mock" aria-hidden="true">
             <div class="lp-board">
@@ -156,7 +235,7 @@ const audiences = [
         </li>
 
         <!-- 5. role-based access -->
-        <li class="lp-tile t-light" style="--i: 4; --a: 16.5deg">
+        <li class="lp-tile t-light" style="--i: 4">
           <h3 class="lp-label">Role-based access</h3>
           <div class="lp-mock" aria-hidden="true">
             <div v-for="r in roles" :key="r.name" class="lp-role">
@@ -166,7 +245,7 @@ const audiences = [
         </li>
 
         <!-- 6. team dashboard -->
-        <li class="lp-tile t-blue" style="--i: 5; --a: 27.5deg">
+        <li class="lp-tile t-blue" style="--i: 5">
           <h3 class="lp-label">Team dashboard</h3>
           <div class="lp-mock" aria-hidden="true">
             <div class="lp-stats">
@@ -178,21 +257,22 @@ const audiences = [
           </div>
         </li>
         </ul>
+        </div>
       </div>
     </section>
 
     <!-- who it's for -->
-    <section id="roles" class="lp-roles" aria-label="Who HireRise is for">
-      <h2 class="lp-h2">One system, <em>three ways in.</em></h2>
+    <section id="roles" ref="rolesEl" class="lp-roles" aria-label="Who HireRise is for">
+      <h2 class="lp-h2" data-r>One system, <em>three ways in.</em></h2>
       <div class="lp-aud">
-        <article v-for="a in audiences" :key="a.title" class="lp-card">
+        <article v-for="a in audiences" :key="a.title" class="lp-card" data-r>
           <h3>{{ a.title }}</h3>
           <ul>
             <li v-for="p in a.points" :key="p">{{ p }}</li>
           </ul>
         </article>
       </div>
-      <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent lp-end">
+      <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent lp-end" data-r>
         Get started
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </RouterLink>
@@ -309,15 +389,15 @@ const audiences = [
 
 /* ---- hero: cards on the left, text on the right ---- */
 .lp-hero {
+  --k: 1.35; /* how big the hand of cards is drawn (1 = 640px wide) */
   display: grid;
-  grid-template-columns: minmax(0, 640px) minmax(0, 1fr);
+  grid-template-columns: calc(640px * var(--k)) minmax(0, 1fr);
   grid-template-areas: "fan copy";
   align-items: center;
-  gap: clamp(24px, 4vw, 72px);
-  max-width: 1320px;
+  gap: 32px;
   min-height: calc(100svh - 86px);
   margin: 0 auto;
-  padding: clamp(28px, 5vh, 64px) clamp(20px, 4vw, 56px) clamp(40px, 6vh, 72px);
+  padding: clamp(28px, 5vh, 64px) 32px 0; /* no bottom padding: the cards run into the bottom edge and are cut off by it */
 }
 .lp-copy {
   grid-area: copy;
@@ -353,15 +433,17 @@ const audiences = [
 }
 
 /* ---- the hand of cards ---- */
-/* the wrapper takes the scaled-down size, the list inside is always drawn at 640 x 440 and scaled with --k */
+/* the wrapper is only as tall as the top half of the cards, so the lower half is cut off at the bottom edge.
+   The list inside is always drawn at 640 x 440 and scaled with --k. */
 .lp-fan-wrap {
-  --k: 1;
   grid-area: fan;
-  justify-self: center;
+  align-self: end;
   width: calc(640px * var(--k));
-  height: calc(440px * var(--k));
+  height: calc(215px * var(--k));
+  overflow: hidden;
   scroll-margin-top: 80px;
 }
+.lp-fan-pan { width: 100%; height: 100%; }
 .lp-fan {
   position: relative;
   width: 640px;
@@ -369,8 +451,9 @@ const audiences = [
   transform: scale(var(--k));
   transform-origin: 0 0;
   list-style: none;
+  pointer-events: none; /* the cards are for looking at only: no hover or click reaction */
 }
-/* every card is turned around a point below it (like a wrist), by its own angle --a */
+/* every card is turned around a point below it (like a wrist); the angle is set by the animation in the script */
 .lp-tile {
   position: absolute;
   left: calc(50% - 115px);
@@ -382,7 +465,6 @@ const audiences = [
   border-radius: 16px;
   box-shadow: -6px 10px 26px rgba(6, 22, 42, 0.4);
   transform-origin: 50% 140%;
-  transform: rotate(var(--a));
 }
 .t-dark { background: var(--lp-dark); color: var(--white); }
 .t-light { background: var(--lp-light); color: var(--lp-ink); }
@@ -506,13 +588,25 @@ const audiences = [
 .lp-spark i { flex: 1; height: var(--s); border-radius: 5px 5px 2px 2px; background: var(--ink); }
 .lp-spark i:last-child { background: var(--brand); }
 
-/* ---- who it's for ---- */
+/* ---- who it's for: a white sheet that grows to full width as you scroll to it ---- */
 .lp-roles {
+  --p: 0; /* scroll progress 0 to 1, set by the script */
+  position: relative;
+  isolation: isolate;
   display: grid;
   justify-items: center;
   gap: 36px;
   padding: clamp(72px, 12vh, 130px) clamp(20px, 4vw, 56px) clamp(64px, 10vh, 110px);
   scroll-margin-top: 20px;
+  color: var(--lp-ink);
+}
+.lp-roles::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc((1 - var(--p)) * 5%) 0;
+  z-index: -1;
+  border-radius: calc((1 - var(--p)) * 56px) calc((1 - var(--p)) * 56px) 0 0;
+  background: var(--white);
 }
 .lp-h2 {
   max-width: 16ch;
@@ -524,6 +618,7 @@ const audiences = [
   text-align: center;
   text-wrap: balance;
 }
+.lp-roles .lp-h2 em { color: var(--brand); }
 .lp-aud {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -533,9 +628,9 @@ const audiences = [
 }
 .lp-card {
   padding: 26px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(14, 58, 110, 0.1);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--lp-light);
 }
 .lp-card h3 {
   margin-bottom: 16px;
@@ -548,7 +643,7 @@ const audiences = [
 .lp-card li {
   position: relative;
   padding-left: 22px;
-  color: var(--lp-text);
+  color: rgba(19, 34, 45, 0.78);
   font-size: 0.92rem;
   line-height: 1.5;
 }
@@ -560,75 +655,50 @@ const audiences = [
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--lp-accent);
+  background: var(--brand);
 }
+.lp .lp-roles .lp-btn-accent { background: var(--ink); border-color: var(--ink); color: var(--white); }
+.lp .lp-roles .lp-btn-accent:hover { background: var(--brand); border-color: var(--brand); }
 
-/* ---- entrance motion ---- */
+/* ---- animation start states: hidden until the script (motion) brings them in ---- */
 .lp-nav,
-.lp-title,
-.lp-sub,
-.lp-actions {
+.lp-copy > *,
+.lp-tile,
+.lp [data-r] {
   opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.lp-title { transition-delay: 0.1s; }
-.lp-sub { transition-delay: 0.22s; }
-.lp-actions { transition-delay: 0.34s; }
-.lp.in .lp-nav,
-.lp.in .lp-title,
-.lp.in .lp-sub,
-.lp.in .lp-actions { opacity: 1; transform: none; filter: none; }
-
-/* the cards start stacked like a deck in one hand, then fan out one after another */
-.lp .lp-tile {
-  opacity: 0;
-  transform: rotate(0deg) translateY(calc(var(--i) * -3px));
-  transition:
-    opacity 0.4s ease calc(0.35s + var(--i) * 0.05s),
-    transform 1.1s cubic-bezier(0.22, 1.25, 0.36, 1) calc(0.55s + var(--i) * 0.07s);
-}
-.lp.in .lp-tile { opacity: 1; transform: rotate(var(--a)); }
-/* the cards are for looking at only: no hover or click reaction */
-.lp-fan { pointer-events: none; }
-
-@media (prefers-reduced-motion: reduce) {
-  .lp *, .lp *::before, .lp *::after { transition: none !important; animation: none !important; }
-  .lp-nav, .lp-title, .lp-sub, .lp-actions { opacity: 1 !important; transform: none !important; filter: none !important; }
-  .lp .lp-tile { opacity: 1 !important; transform: rotate(var(--a)) !important; }
 }
 
-/* ---- smaller screens: the whole hand shrinks, then moves below the text ---- */
-@media (max-width: 1180px) {
-  .lp-hero { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); }
-  .lp-fan-wrap { --k: 0.875; }
-}
+/* ---- smaller screens: the hand shrinks, then moves below the text ---- */
+@media (max-width: 1439px) { .lp-hero { --k: 1.15; } }
+@media (max-width: 1279px) { .lp-hero { --k: 0.95; } }
+@media (max-width: 1099px) { .lp-hero { --k: 0.75; } }
 @media (max-width: 1000px) {
   .lp-aud { grid-template-columns: 1fr; max-width: 560px; }
 }
 @media (max-width: 900px) {
   .lp-hero {
+    --k: 0.9;
     grid-template-columns: 1fr;
     grid-template-areas: "copy" "fan";
+    justify-items: center;
     min-height: 0;
     gap: 36px;
-    padding-top: 40px;
+    padding: 40px 20px 0;
   }
   .lp-copy { justify-items: center; text-align: center; }
   .lp-actions { justify-content: center; }
-  .lp-fan-wrap { --k: 0.9; }
 }
 @media (max-width: 680px) {
+  .lp-hero { --k: 0.8; }
   .lp-links, .lp-sep { display: none; } /* just the logo and Sign in */
   .lp-nav { padding-left: 14px; gap: 14px; }
-  .lp-fan-wrap { --k: 0.8; }
 }
 @media (max-width: 540px) {
-  .lp-fan-wrap { --k: 0.66; }
+  .lp-hero { --k: 0.66; }
   .lp-actions { width: 100%; }
   .lp-actions .btn { flex: 1 1 auto; }
 }
 @media (max-width: 440px) {
-  .lp-fan-wrap { --k: 0.54; }
+  .lp-hero { --k: 0.54; }
 }
 </style>
