@@ -24,7 +24,7 @@ onMounted(() => {
   // SMOOTH scroll-linking. A plain scroll() animation jumps to a new frame for every wheel tick, so it looks steppy.
   // Here the scrollbar only sets a TARGET (0 to 1). A small loop then glides the animation toward that target
   // a little more every frame (exponential easing, "10" = how snappy it follows, higher = tighter).
-  const smoothScroll = (apply, options) => {
+  const smoothScroll = (apply, options, once = true) => {
     let cur = null
     let target = 0
     let raf = 0
@@ -42,10 +42,12 @@ onMounted(() => {
       apply(cur)
     }
     const stop = scroll((p) => {
-      target = p
+      // once = true: the target can only move FORWARD, so an animation that has played stays finished when you
+      // scroll back up (until the page is refreshed). The hero parallax passes false so it still follows both ways.
+      target = once ? Math.max(target, p) : p
       if (cur === null) {
-        cur = p // first value: jump straight there (the page may load already scrolled down)
-        apply(p)
+        cur = target // first value: jump straight there (the page may load already scrolled down)
+        apply(cur)
       } else if (!raf) {
         last = performance.now()
         raf = requestAnimationFrame(tick)
@@ -57,12 +59,12 @@ onMounted(() => {
     }
   }
   // like smoothScroll, but drives a motion animation (keyframes) instead of a callback
-  const smoothAnimate = (el, keyframes, options) => {
+  const smoothAnimate = (el, keyframes, options, once = true) => {
     const anim = animate(el, keyframes, { ease: 'linear', duration: 1 })
     anim.pause()
     return smoothScroll((p) => {
       anim.time = p * anim.duration
-    }, options)
+    }, options, once)
   }
 
   // safety net: if the animation code ever throws, everything simply appears in its final place
@@ -106,8 +108,8 @@ onMounted(() => {
     // 3. scrolling away: the text drifts up and fades, the hand sinks into the page below
     if (!reduce) {
       const heroRange = { target: heroEl.value, offset: ['start start', 'end start'] }
-      stops.push(smoothAnimate(copyEl.value, { y: [0, -70], opacity: [1, 0.15] }, heroRange))
-      stops.push(smoothAnimate(panEl.value, { y: [0, 90] }, heroRange))
+      stops.push(smoothAnimate(copyEl.value, { y: [0, -70], opacity: [1, 0.15] }, heroRange, false))
+      stops.push(smoothAnimate(panEl.value, { y: [0, 90] }, heroRange, false))
     }
 
     // 4. the next section: a white sheet grows to full width as it scrolls in (--p goes 0 to 1),
@@ -140,7 +142,7 @@ onMounted(() => {
     )
 
     // 6. the sections below are SCRUBBED by the scrollbar: the animation moves exactly as far as you scroll,
-    //    so scrolling down zooms in and tilts the panels flat, and scrolling back up plays it in reverse.
+    //    so scrolling down zooms in and tilts the panels flat. Each one plays once: scrolling back up leaves it flat.
     //    (perspective on each section's wrapper is what makes the tilts look 3D)
     const scrub = (el, keyframes, offset = ['start end', 'center 0.7'], target = el) =>
       stops.push(smoothAnimate(el, keyframes, { target, offset }))
