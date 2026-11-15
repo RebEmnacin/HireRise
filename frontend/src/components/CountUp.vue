@@ -12,7 +12,7 @@ let observer
 
 function run() {
   const start = performance.now()
-  const duration = 1600
+  const duration = 700
   const tick = (now) => {
     const t = Math.min((now - start) / duration, 1)
     shown.value = Math.round(props.to * (1 - Math.pow(1 - t, 3))) // starts fast, ends slow
@@ -29,7 +29,7 @@ onMounted(() => {
         observer.disconnect()
       }
     },
-    { threshold: 0.6 }
+    { threshold: 0.2 }
   )
   observer.observe(el.value)
 })
