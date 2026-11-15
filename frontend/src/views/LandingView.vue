@@ -121,7 +121,7 @@ onMounted(() => {
     // faq: the white sheet zooms IN to full size, and the questions swing in from alternate sides like doors
     scrub(faqEl.value.querySelector('.lp-faq-sheet'), { scale: [0.86, 1], y: [60, 0] }, ['start end', 'start 0.25'])
     faqEl.value.querySelectorAll('.lp-q').forEach((el, i) =>
-      scrub(el, { x: [i % 2 ? 140 : -140, 0], rotateY: [i % 2 ? -26 : 26, 0] }, ['start end', 'center 0.8']),
+      scrub(el, { x: [i % 2 ? 140 : -140, 0], rotateY: [i % 2 ? -26 : 26, 0] }, ['start end', 'start 0.88']), // done when the top is 88% down, so the lowest question is flat as soon as it shows
     )
 
     // footer: the big word zooms in and tips upright as the page runs out
