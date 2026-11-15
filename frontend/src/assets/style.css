@@ -614,7 +614,7 @@ textarea {
   stroke-dashoffset: 1;
 }
 .in .line-icon * {
-  animation: draw 1.3s ease-in-out forwards;
+  animation: draw 0.55s ease-out forwards;
 }
 
 .stat .num {
@@ -763,7 +763,7 @@ textarea {
 .stack-bar span {
   display: block;
   height: 100%;
-  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .legend {
   display: flex;
@@ -941,8 +941,8 @@ textarea {
 /* elements with .reveal fade up when JS adds .in (when they scroll into view) */
 .reveal {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(14px);
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   transition-delay: var(--d, 0s);
 }
 .reveal.in {
