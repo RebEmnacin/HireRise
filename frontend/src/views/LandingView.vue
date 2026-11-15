@@ -184,10 +184,130 @@ onMounted(() => {
 
 onBeforeUnmount(() => stops.forEach((stop) => typeof stop === 'function' && stop()))
 
+// ---- nav marker: shows which section you are in, and hops between links ----
+const linksEl = ref(null)
+const indEl = ref(null)
+const SECTIONS = ['features', 'roles', 'how', 'stack', 'faq'] // top to bottom ("stack" has no link of its own)
+const NAV_OF = { stack: 'how' } // so while you are in "Built with" the marker stays under "How it works"
+const DOT = 6 // px: the size of the dot while travelling
+let activeId = '' // the section you are in (from scrolling)
+let shownEl = null // the link the marker is under right now
+let moveAnim = null // the running hop, so a new hop can cancel it
+let lockUntil = 0 // after clicking a link we ignore scroll-spy while the page glides there
+
+const linkOf = (id) => linksEl.value?.querySelector(`[data-sec="${NAV_OF[id] ?? id}"]`) ?? null
+const markLinks = (target) =>
+  linksEl.value?.querySelectorAll('a').forEach((a) => a.classList.toggle('on', a === target))
+
+// put the marker straight under a link (no animation): used on first show and on resize
+function placeMarker(link) {
+  const ind = indEl.value
+  moveAnim?.stop()
+  if (!link || !link.offsetWidth) {
+    ind.style.opacity = 0
+    shownEl = null
+    return
+  }
+  ind.style.cssText += `;left:${link.offsetLeft}px;width:${link.offsetWidth}px;height:2px;opacity:1`
+  shownEl = link
+}
+
+// move the marker to a link: underline -> dot -> travel -> underline
+function moveMarker(link) {
+  const ind = indEl.value
+  if (!ind || link === shownEl) return
+  if (!link || !link.offsetWidth) {
+    moveAnim?.stop()
+    animate(ind, { opacity: 0 }, { duration: 0.2 })
+    shownEl = null
+    return
+  }
+  const first = !shownEl || +getComputedStyle(ind).opacity === 0
+  shownEl = link
+  moveAnim?.stop()
+  const toCenter = link.offsetLeft + link.offsetWidth / 2
+  if (first) {
+    // nothing to hop from: a dot pops in under the link, then stretches into the underline
+    ind.style.left = `${toCenter - DOT / 2}px`
+    ind.style.width = `${DOT}px`
+    ind.style.height = `${DOT}px`
+    moveAnim = animate([
+      [ind, { opacity: 1, scale: [0.4, 1] }, { duration: 0.2 }],
+      [ind, { left: link.offsetLeft, width: link.offsetWidth, height: 2 }, { duration: 0.28, ease: [0.22, 1, 0.36, 1] }],
+    ])
+    return
+  }
+  const left = parseFloat(getComputedStyle(ind).left)
+  const width = parseFloat(getComputedStyle(ind).width)
+  const fromCenter = left + width / 2
+  const dist = Math.abs(toCenter - fromCenter)
+  moveAnim = animate([
+    // 1. shrink into a dot, right where it is
+    [ind, { left: fromCenter - DOT / 2, width: DOT, height: DOT }, { duration: 0.16, ease: 'easeIn' }],
+    // 2. the dot travels (a little longer for a longer trip)
+    [ind, { left: toCenter - DOT / 2 }, { duration: Math.min(0.2 + dist / 900, 0.5), ease: [0.65, 0, 0.35, 1] }],
+    // 3. it lands and stretches into the underline, with a tiny overshoot
+    [ind, { left: link.offsetLeft, width: link.offsetWidth, height: 2 }, { type: 'spring', stiffness: 380, damping: 22 }],
+  ])
+}
+
+// which section are we in? the last one whose top has passed 40% of the way down the screen
+function spy() {
+  if (performance.now() < lockUntil) return
+  let cur = ''
+  for (const id of SECTIONS) {
+    const el = document.getElementById(id)
+    if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.4) cur = id
+  }
+  if (cur === activeId) return
+  activeId = cur
+  const link = linkOf(cur)
+  markLinks(link)
+  moveMarker(link)
+}
+
+let spyFrame = 0
+const onScroll = () => {
+  cancelAnimationFrame(spyFrame)
+  spyFrame = requestAnimationFrame(spy)
+}
+const onResize = () => placeMarker(shownEl && linkOf(activeId))
+
+// hovering a link: the marker hops over to it; leaving the nav sends it back to the section you are in
+const onOver = (e) => {
+  const a = e.target.closest?.('a[data-sec]')
+  if (a) moveMarker(a)
+}
+const onLeave = () => moveMarker(linkOf(activeId))
+
+onMounted(() => {
+  const nav = linksEl.value
+  nav.addEventListener('mouseover', onOver)
+  nav.addEventListener('mouseleave', onLeave)
+  nav.addEventListener('focusin', onOver)
+  nav.addEventListener('focusout', onLeave)
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onResize)
+  spy()
+})
+onBeforeUnmount(() => {
+  moveAnim?.stop()
+  cancelAnimationFrame(spyFrame)
+  window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', onResize)
+})
+
 // Smooth-scroll to a section by id. A plain <a href="#x"> would be picked up by the router
 // (its scrollBehavior sends every navigation back to the top), so we scroll by hand instead.
 function go(id) {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  // the marker goes straight to the clicked link instead of hopping through every section on the way
+  lockUntil = performance.now() + 1100
+  activeId = id
+  const link = linkOf(id)
+  markLinks(link)
+  moveMarker(link)
+  setTimeout(spy, 1150)
   document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
 }
 
@@ -278,11 +398,13 @@ const audiences = [
         <span>Hire<span class="rise">Rise</span></span>
       </RouterLink>
       <i class="lp-sep" aria-hidden="true"></i>
-      <nav class="lp-links" aria-label="Page sections">
-        <a href="#features" @click.prevent="go('features')">Features</a>
-        <a href="#roles" @click.prevent="go('roles')">Who it's for</a>
-        <a href="#how" @click.prevent="go('how')">How it works</a>
-        <a href="#faq" @click.prevent="go('faq')">FAQ</a>
+      <nav ref="linksEl" class="lp-links" aria-label="Page sections">
+        <a href="#features" data-sec="features" @click.prevent="go('features')">Features</a>
+        <a href="#roles" data-sec="roles" @click.prevent="go('roles')">Who it's for</a>
+        <a href="#how" data-sec="how" @click.prevent="go('how')">How it works</a>
+        <a href="#faq" data-sec="faq" @click.prevent="go('faq')">FAQ</a>
+        <!-- the marker under the links: an underline that shrinks to a dot, hops to the next link, and stretches back -->
+        <i ref="indEl" class="lp-ind" aria-hidden="true"></i>
       </nav>
       <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent lp-nav-cta">Sign in</RouterLink>
     </header>
@@ -579,6 +701,7 @@ const audiences = [
   background: rgba(255, 255, 255, 0.16);
 }
 .lp-links {
+  position: relative;
   display: flex;
   gap: clamp(12px, 2vw, 22px);
   font-size: 0.88rem;
@@ -588,8 +711,21 @@ const audiences = [
   color: rgba(255, 255, 255, 0.76);
   transition: color 0.2s;
 }
-.lp-links a:hover {
+.lp-links a:hover,
+.lp-links a.on {
   color: var(--white);
+}
+/* the marker: an underline that turns into a dot while it hops between links (all sizes are set by the script) */
+.lp-ind {
+  position: absolute;
+  bottom: -7px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--lp-accent);
+  opacity: 0;
+  pointer-events: none;
 }
 .lp .lp-nav-cta {
   padding: 8px 18px;
