@@ -69,10 +69,10 @@ function signOut() {
         <AnimatePresence mode="wait">
           <motion.div
             :key="current.path"
-            :initial="{ opacity: 0, y: 14 }"
+            :initial="{ opacity: 0, y: 8 }"
             :animate="{ opacity: 1, y: 0 }"
-            :exit="{ opacity: 0, y: -8 }"
-            :transition="{ duration: 0.22, ease: 'easeOut' }"
+            :exit="{ opacity: 0, y: -4, transition: { duration: 0.08 } }"
+            :transition="{ duration: 0.16, ease: 'easeOut' }"
           >
             <component :is="Component" />
           </motion.div>
