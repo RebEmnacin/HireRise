@@ -39,7 +39,7 @@ watch(error, (msg) => {
 /* ============ left side: a little demo of the app that plays on a loop ============ */
 // (nothing here is real data: it only shows what you get after signing in)
 const stats = ref({ present: 0, leave: 0, pending: 0 })
-const clock = ref('08:52:00')
+const clock = ref('--:--:--')
 const status = ref('pending') // the leave request on the demo: 'pending' -> 'approved' -> back again
 
 const demoEl = ref(null)
@@ -54,14 +54,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const spring = (stiffness, damping, extra = {}) => ({ type: 'spring', stiffness, damping, ...extra })
 const countTo = (key, to, delay = 0) => animate(0, to, { duration: 1.1, delay, ease: [0.22, 1, 0.36, 1], onUpdate: (v) => (stats.value[key] = Math.round(v)) })
 
-// the clock ticks forward one second at a time
+// the clock shows the real time in the Philippines (Philippine Standard Time, UTC+8), whatever the visitor's own time zone is
+const manila = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
 let tick
 function startClock() {
-  let s = 52 * 60
-  tick = setInterval(() => {
-    s += 1
-    clock.value = `08:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
-  }, 1000)
+  const update = () => (clock.value = manila.format(new Date()))
+  update()
+  tick = setInterval(update, 1000)
 }
 
 // where is an element's centre, measured inside the demo area?
@@ -183,7 +182,7 @@ onBeforeUnmount(() => {
           <i class="lg-pulse"></i>
           <div>
             <b>{{ clock }}</b>
-            <small>Clocked in · on time</small>
+            <small>Philippine Standard Time · UTC+8</small>
           </div>
         </div>
 
@@ -243,7 +242,7 @@ onBeforeUnmount(() => {
 /* ====== login. Everything starts with lg- so it never clashes with the app styles. Flat colours only. ====== */
 .lg {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(380px, 1fr);
+  grid-template-columns: minmax(380px, 1fr) minmax(0, 1.15fr); /* the form is on the LEFT, the demo on the right */
   height: 100vh;
   height: 100svh; /* exactly one screen: the page itself never scrolls */
   min-height: 620px;
@@ -303,7 +302,7 @@ onBeforeUnmount(() => {
 .lg-cursor { position: absolute; left: 0; top: 0; z-index: 2; width: 26px; height: 26px; opacity: 0; fill: var(--white); stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35)); pointer-events: none; }
 
 /* ---- right: the form ---- */
-.lg-pane { position: relative; display: grid; place-items: center; padding: 72px clamp(24px, 5vw, 72px) 32px; overflow-y: auto; }
+.lg-pane { order: -1; position: relative; display: grid; place-items: center; padding: 72px clamp(24px, 5vw, 72px) 32px; overflow-y: auto; }
 .lg-back {
   position: absolute;
   top: 24px;
