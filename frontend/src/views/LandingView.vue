@@ -21,6 +21,50 @@ onMounted(() => {
   const angle = (i) => (i - (tiles.length - 1) / 2) * 11 // the fan: 11 degrees between cards
   const spring = (stiffness, damping, extra = {}) => ({ type: 'spring', stiffness, damping, ...extra })
 
+  // SMOOTH scroll-linking. A plain scroll() animation jumps to a new frame for every wheel tick, so it looks steppy.
+  // Here the scrollbar only sets a TARGET (0 to 1). A small loop then glides the animation toward that target
+  // a little more every frame (exponential easing, "10" = how snappy it follows, higher = tighter).
+  const smoothScroll = (apply, options) => {
+    let cur = null
+    let target = 0
+    let raf = 0
+    let last = 0
+    const tick = (now) => {
+      const dt = Math.min((now - last) / 1000, 0.05)
+      last = now
+      cur += (target - cur) * (1 - Math.exp(-dt * 10))
+      if (Math.abs(target - cur) < 0.0005) {
+        cur = target
+        raf = 0
+      } else {
+        raf = requestAnimationFrame(tick)
+      }
+      apply(cur)
+    }
+    const stop = scroll((p) => {
+      target = p
+      if (cur === null) {
+        cur = p // first value: jump straight there (the page may load already scrolled down)
+        apply(p)
+      } else if (!raf) {
+        last = performance.now()
+        raf = requestAnimationFrame(tick)
+      }
+    }, options)
+    return () => {
+      stop()
+      cancelAnimationFrame(raf)
+    }
+  }
+  // like smoothScroll, but drives a motion animation (keyframes) instead of a callback
+  const smoothAnimate = (el, keyframes, options) => {
+    const anim = animate(el, keyframes, { ease: 'linear', duration: 1 })
+    anim.pause()
+    return smoothScroll((p) => {
+      anim.time = p * anim.duration
+    }, options)
+  }
+
   // safety net: if the animation code ever throws, everything simply appears in its final place
   function showEverything() {
     navEl.value.style.opacity = 1
@@ -62,8 +106,8 @@ onMounted(() => {
     // 3. scrolling away: the text drifts up and fades, the hand sinks into the page below
     if (!reduce) {
       const heroRange = { target: heroEl.value, offset: ['start start', 'end start'] }
-      stops.push(scroll(animate(copyEl.value, { y: [0, -70], opacity: [1, 0.15] }, { ease: 'linear' }), heroRange))
-      stops.push(scroll(animate(panEl.value, { y: [0, 90] }, { ease: 'linear' }), heroRange))
+      stops.push(smoothAnimate(copyEl.value, { y: [0, -70], opacity: [1, 0.15] }, heroRange))
+      stops.push(smoothAnimate(panEl.value, { y: [0, 90] }, heroRange))
     }
 
     // 4. the next section: a white sheet grows to full width as it scrolls in (--p goes 0 to 1),
@@ -78,7 +122,7 @@ onMounted(() => {
       )
     }
     stops.push(
-      scroll(
+      smoothScroll(
         (p) => {
           rolesEl.value.style.setProperty('--p', p)
           if (p > 0.45 && !revealed) reveal()
@@ -99,7 +143,7 @@ onMounted(() => {
     //    so scrolling down zooms in and tilts the panels flat, and scrolling back up plays it in reverse.
     //    (perspective on each section's wrapper is what makes the tilts look 3D)
     const scrub = (el, keyframes, offset = ['start end', 'center 0.7'], target = el) =>
-      stops.push(scroll(animate(el, keyframes, { ease: 'linear' }), { target, offset }))
+      stops.push(smoothAnimate(el, keyframes, { target, offset }))
 
     // how it works: the title zooms out to size, three panels swing in from the sides and the middle one rises
     scrub(howEl.value.querySelector('.lp-h2'), { scale: [1.5, 1], y: [70, 0] }, ['start end', 'start 0.55'])
