@@ -9,14 +9,14 @@ const observer = new IntersectionObserver(
       }
     })
   },
-  { threshold: 0.15 }
+  { threshold: 0.05 } // 5% showing is enough, so nothing waits for the user to scroll
 )
 
 export default {
   // mounted = runs when the element is added to the page
   mounted(el, binding) {
     el.classList.add('reveal')
-    if (binding.value) el.style.setProperty('--d', `${binding.value}s`)
+    if (binding.value) el.style.setProperty('--d', `${binding.value * 0.5}s`) // half of what the page asks for, so the stagger is quick
     observer.observe(el)
   },
   // unmounted = runs when it is removed (stop watching so nothing leaks)
