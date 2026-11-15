@@ -1,0 +1,55 @@
+/* ====== landing. Everything starts with lp- so it never clashes with the app styles ====== */
+.lp {
+  --lp-bg: var(--ink);
+  --lp-accent: var(--accent); /* the same beige the login panel and sidebar use */
+  --lp-accent-hover: var(--white);
+  --lp-on-accent: var(--ink);
+  --lp-text: rgba(255, 255, 255, 0.78);
+  --lp-dark: var(--brand-dark);
+  --lp-light: var(--bg);
+  --lp-blue: var(--light-blue);
+  --lp-ink: var(--ink);
+  --lp-serif: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif; /* same font as the app and the logo lettering */
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-top: 14px; /* padding, not a margin on the nav: a margin would leak out and show the page background above */
+  overflow-x: clip;
+  background: var(--lp-bg);
+  color: var(--white);
+}
+
+/* ---- buttons ---- */
+/* (".lp" in front of each rule makes them win over the global .btn rules in style.css) */
+.lp .lp-btn {
+  padding: 12px 24px;
+  font-size: 0.95rem;
+}
+.lp .lp-btn-accent {
+  background: var(--lp-accent);
+  border-color: var(--lp-accent);
+  color: var(--lp-on-accent);
+}
+.lp .lp-btn-accent:hover {
+  background: var(--lp-accent-hover);
+  border-color: var(--lp-accent-hover);
+}
+.lp .lp-btn-ghost {
+  background: transparent;
+  border-color: rgba(211, 206, 190, 0.55);
+  color: var(--lp-accent);
+}
+.lp .lp-btn-ghost:hover {
+  background: rgba(211, 206, 190, 0.14);
+  border-color: var(--lp-accent);
+}
+.lp .btn svg {
+  transition: transform 0.2s;
+}
+.lp .btn:hover svg {
+  transform: translateX(3px);
+}
+.lp .btn:focus-visible,
+.lp-links a:focus-visible {
+  outline: 2px solid var(--lp-accent);
+  outline-offset: 3px;
+}
