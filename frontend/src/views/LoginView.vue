@@ -144,6 +144,7 @@ onBeforeUnmount(() => {
         <span>Hire<span class="rise">Rise</span></span>
       </RouterLink>
 
+      <div class="lg-stage">
       <div class="lg-pitch">
         <h2>Welcome <em>back.</em></h2>
         <p>Your team, their attendance, leave and tasks: right where you left them.</p>
@@ -188,6 +189,7 @@ onBeforeUnmount(() => {
 
         <!-- the pretend mouse pointer that clicks "Approve" -->
         <svg ref="cursorEl" class="lg-cursor" viewBox="0 0 24 24"><path d="M5 3l14 7-6 2-2 6z" /></svg>
+      </div>
       </div>
     </aside>
 
@@ -254,14 +256,18 @@ onBeforeUnmount(() => {
 /* ---- left: the dark side ---- */
 .lg-side {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(18px, 4vh, 40px);
-  padding: clamp(24px, 4vh, 44px) clamp(28px, 4.5vw, 72px);
+  display: grid;
+  grid-template-rows: 88px minmax(0, 1fr); /* row 1: the logo row (same height as the form side's top row), row 2: the content */
+  justify-items: center;
+  padding: 0 clamp(28px, 4.5vw, 72px) 32px;
   background: var(--ink); /* the same dark slate as the landing page */
   color: var(--white);
   overflow: hidden;
 }
+/* logo, headline and demo share ONE column, so their left edges line up; the column sits in the middle of the dark side */
+.lg-brand, .lg-stage { width: min(520px, 100%); }
+.lg-brand { align-self: center; justify-self: center; }
+.lg-stage { align-self: center; display: grid; gap: clamp(18px, 4vh, 40px); }
 .lg .brand { color: var(--white); }
 .lg .brand .rise { color: var(--accent); } /* the beige is for dark backgrounds */
 .lg .brand-logo { height: 32px; filter: brightness(0) invert(1); } /* the logo is navy, so turn it white on the dark side */
@@ -270,7 +276,7 @@ onBeforeUnmount(() => {
 .lg-pitch p { max-width: 30ch; margin-top: 14px; font-size: 1.05rem; line-height: 1.55; color: rgba(255, 255, 255, 0.72); }
 
 /* the demo: three flat cards stacked in a column, the pointer floats above them */
-.lg-demo { position: relative; display: grid; gap: 14px; width: min(440px, 100%); margin: auto 0; }
+.lg-demo { position: relative; display: grid; gap: 14px; width: 100%; }
 .lg-dcard { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 16px; opacity: 0; }
 .lg-glance { display: grid; gap: 12px; background: var(--brand-dark); }
 .lg-dlabel { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
@@ -302,11 +308,11 @@ onBeforeUnmount(() => {
 .lg-cursor { position: absolute; left: 0; top: 0; z-index: 2; width: 26px; height: 26px; opacity: 0; fill: var(--white); stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35)); pointer-events: none; }
 
 /* ---- right: the form ---- */
-.lg-pane { order: -1; position: relative; display: grid; place-items: center; padding: 72px clamp(24px, 5vw, 72px) 32px; overflow-y: auto; }
+.lg-pane { order: -1; position: relative; display: grid; place-items: center; padding: 88px clamp(24px, 5vw, 72px) 32px; overflow-y: auto; } /* top 88px = the same logo row as the dark side, so both columns centre in the same space */
 .lg-back {
   position: absolute;
-  top: 24px;
-  left: clamp(24px, 5vw, 72px);
+  top: 23px; /* centred on the logo row (88px) */
+  left: calc(50% - min(200px, 50% - clamp(24px, 5vw, 72px))); /* the same left edge as the form (the form is 400px wide and centred) */
   display: inline-flex;
   align-items: center;
   gap: 8px;
