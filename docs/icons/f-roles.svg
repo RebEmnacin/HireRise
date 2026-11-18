@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" fill="#e4eefb"/>
+  <g stroke="#144c8c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M32 13l15 6v11c0 10-6 17-15 21-9-4-15-11-15-21V19z"/><circle cx="32" cy="29" r="4" stroke="#8ab9ee"/><path d="M24 41a8 8 0 0116 0" stroke="#8ab9ee"/></g>
+  <style>@keyframes b{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}g{animation:b 3s ease-in-out infinite}</style>
+</svg>

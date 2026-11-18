@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="300" viewBox="0 0 1000 300" role="img" aria-label="HireRise, an internal HR management system">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f3c58"/><stop offset="1" stop-color="#144c8c"/></linearGradient>
+  </defs>
+  <rect width="1000" height="300" fill="url(#bg)"/>
+  <g stroke="#ffffff" stroke-opacity=".06"><path d="M0 75H1000M0 150H1000M0 225H1000"/></g>
+  <!-- the team grows: bars rise one after another -->
+  <g>
+    <rect x="560" y="260" width="42" height="0" fill="#8ab9ee"><animate attributeName="height" from="0" to="70" begin="0.50s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/><animate attributeName="y" from="260" to="190" begin="0.50s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/></rect>
+    <rect x="620" y="260" width="42" height="0" fill="#8ab9ee"><animate attributeName="height" from="0" to="110" begin="0.68s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/><animate attributeName="y" from="260" to="150" begin="0.68s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/></rect>
+    <rect x="680" y="260" width="42" height="0" fill="#8ab9ee"><animate attributeName="height" from="0" to="90" begin="0.86s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/><animate attributeName="y" from="260" to="170" begin="0.86s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/></rect>
+    <rect x="740" y="260" width="42" height="0" fill="#8ab9ee"><animate attributeName="height" from="0" to="150" begin="1.04s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/><animate attributeName="y" from="260" to="110" begin="1.04s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/></rect>
+    <rect x="800" y="260" width="42" height="0" fill="#8ab9ee"><animate attributeName="height" from="0" to="130" begin="1.22s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/><animate attributeName="y" from="260" to="130" begin="1.22s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/></rect>
+    <rect x="860" y="260" width="42" height="0" fill="#8ab9ee"><animate attributeName="height" from="0" to="190" begin="1.40s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/><animate attributeName="y" from="260" to="70" begin="1.40s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/></rect>
+    <rect x="920" y="260" width="42" height="0" fill="#d3cebe"><animate attributeName="height" from="0" to="170" begin="1.58s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/><animate attributeName="y" from="260" to="90" begin="1.58s" dur=".9s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/></rect>
+  </g>
+  <!-- people, floating -->
+  <g font-family="Segoe UI,Helvetica,Arial,sans-serif" font-size="14" font-weight="800" fill="#1f3c58" text-anchor="middle">
+    <g><circle cx="500" cy="236" r="22" fill="#d3cebe"/><text x="500" y="241">AD</text><animateTransform attributeName="transform" type="translate" values="0 0;0 -12;0 0" dur="3.2s" repeatCount="indefinite"/></g>
+    <g><circle cx="530" cy="88" r="17" fill="#8ab9ee"/><text x="530" y="93" font-size="12">MS</text><animateTransform attributeName="transform" type="translate" values="0 0;0 -10;0 0" dur="2.6s" begin="-1s" repeatCount="indefinite"/></g>
+    <g><circle cx="950" cy="70" r="20" fill="#d3cebe"/><text x="950" y="75">JR</text><animateTransform attributeName="transform" type="translate" values="0 0;0 -11;0 0" dur="3.6s" begin="-2s" repeatCount="indefinite"/></g>
+  </g>
+  <!-- title -->
+  <g font-family="Segoe UI,Helvetica,Arial,sans-serif">
+    <g transform="translate(60 92)" opacity="0">
+      <rect width="56" height="56" fill="#8ab9ee"/>
+      <path d="M13 40V16M13 28h16M29 16v24" fill="none" stroke="#1f3c58" stroke-width="6" stroke-linecap="square"/>
+      <path d="M36 40V16h8a7 7 0 010 14h-8M44 30l8 10" fill="none" stroke="#1f3c58" stroke-width="5" stroke-linecap="square" stroke-linejoin="round" transform="translate(-1 0) scale(.9) translate(4 2)"/>
+      <animate attributeName="opacity" from="0" to="1" begin=".1s" dur=".6s" fill="freeze"/>
+    </g>
+    <text x="134" y="136" font-size="58" font-weight="800" fill="#fff" opacity="0">Hire<tspan fill="#d3cebe">Rise</tspan><animate attributeName="opacity" from="0" to="1" begin=".3s" dur=".7s" fill="freeze"/><animate attributeName="x" from="110" to="134" begin=".3s" dur=".7s" fill="freeze"/></text>
+    <text x="62" y="190" font-size="22" fill="#cfe0f5" opacity="0">Every employee, every day, in one place.<animate attributeName="opacity" from="0" to="1" begin=".9s" dur=".8s" fill="freeze"/></text>
+    <g font-size="14" font-weight="700" opacity="0"><animate attributeName="opacity" from="0" to="1" begin="1.4s" dur=".8s" fill="freeze"/>
+      <rect x="62" y="215" width="96" height="30" rx="15" fill="#8ab9ee"/><text x="110" y="235" fill="#1f3c58" text-anchor="middle">Vue 3</text>
+      <rect x="168" y="215" width="96" height="30" rx="15" fill="#8ab9ee"/><text x="216" y="235" fill="#1f3c58" text-anchor="middle">FastAPI</text>
+      <rect x="274" y="215" width="110" height="30" rx="15" fill="#d3cebe"/><text x="329" y="235" fill="#1f3c58" text-anchor="middle">SQLAlchemy</text>
+    </g>
+  </g>
+</svg>
