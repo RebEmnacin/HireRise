@@ -10,9 +10,9 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-4a8fd6?style=for-the-badge&logo=fastapi&logoColor=white)
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-8a836a?style=for-the-badge&logoColor=white)
 
-### <img src="docs/icons/h-book.svg" width="20" height="20" align="absmiddle" alt="" /> [Setup guide](SETUP.md) &nbsp;·&nbsp; <img src="docs/icons/h-features.svg" width="20" height="20" align="absmiddle" alt="" /> [Features](#-features) &nbsp;·&nbsp; <img src="docs/icons/h-roles.svg" width="20" height="20" align="absmiddle" alt="" /> [Roles](#-roles) &nbsp;·&nbsp; <img src="docs/icons/h-quickstart.svg" width="20" height="20" align="absmiddle" alt="" /> [Quick start](#-quick-start) &nbsp;·&nbsp; <img src="docs/icons/h-roadmap.svg" width="20" height="20" align="absmiddle" alt="" /> [Roadmap](#-roadmap)
+### <img src="docs/icons/h-quickstart.svg" width="20" height="20" align="absmiddle" alt="" /> [Live site](https://hirerise.vercel.app) &nbsp;·&nbsp; <img src="docs/icons/h-book.svg" width="20" height="20" align="absmiddle" alt="" /> [Setup guide](SETUP.md) &nbsp;·&nbsp; <img src="docs/icons/h-features.svg" width="20" height="20" align="absmiddle" alt="" /> [Features](#-features) &nbsp;·&nbsp; <img src="docs/icons/h-roles.svg" width="20" height="20" align="absmiddle" alt="" /> [Roles](#-roles) &nbsp;·&nbsp; <img src="docs/icons/h-quickstart.svg" width="20" height="20" align="absmiddle" alt="" /> [Quick start](#-quick-start) &nbsp;·&nbsp; <img src="docs/icons/h-roadmap.svg" width="20" height="20" align="absmiddle" alt="" /> [Roadmap](#-roadmap)
 
-[![HireRise landing page](docs/screenshots/landing.png)](docs/screenshots/landing.png)
+[![HireRise landing page](docs/screenshots/landing.png)](https://hirerise.vercel.app)
 
 </div>
 
@@ -20,6 +20,9 @@ An internal HR management system. Track employee status, attendance, leave and t
 
 > [!NOTE]
 > HireRise is a full-stack portfolio project, built to learn how a real login, role-based pages and an API fit together.
+
+> [!TIP]
+> Just want a look? Open the [live site](https://hirerise.vercel.app) to see the landing page. There is no public demo account: the first admin is created from `.env`, so to sign in and click around, run it locally with the [quick start](#-quick-start).
 
 > [!WARNING]
 > Work in progress. Login, roles and route guards run on the real backend. Employees, attendance, leave, tasks and the dashboard use **sample data in the browser** for now, and reloading the page resets it. See [Current status](#-current-status).
@@ -256,7 +259,8 @@ HireRise/
 - [ ] Password reset by HR, and a change-password page
 - [ ] Rate limiting on login
 - [ ] Automated tests (pytest for the API, Vitest and Playwright for the UI)
-- [ ] Deploy (frontend on Vercel or Netlify, backend on a host with Postgres)
+- [x] Frontend deployed on Vercel
+- [ ] Deploy the backend on a host with Postgres, and point `VITE_API_URL` at it
 
 <div align="center">
 
