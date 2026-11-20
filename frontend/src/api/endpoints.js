@@ -8,6 +8,9 @@ export const authApi = {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       })
       .then((r) => r.data),
+  // the "Try the demo" buttons: ask whether the demo is switched on, then sign in as a demo account (no password)
+  demoStatus: () => api.get('/auth/demo').then((r) => r.data),
+  demoLogin: (account) => api.post('/auth/demo-login', { account }).then((r) => r.data),
   me: () => api.get('/auth/me').then((r) => r.data),
   changePassword: (current_password, new_password) =>
     api.post('/auth/change-password', { current_password, new_password }),
