@@ -22,6 +22,23 @@ function readUser() {
   }
 }
 
+// the same two people the backend's demo accounts are (ids 1 and 2 match the sample data in stores/hr.js)
+function offlineDemoSession(account) {
+  const hr = account === 'hr'
+  return {
+    access_token: 'offline-demo',
+    user: {
+      id: hr ? -1 : -2,
+      email: hr ? 'demo.hr@hirerise.example' : 'demo.employee@hirerise.example',
+      role: hr ? 'hr' : 'employee',
+      is_active: true,
+      employee: hr
+        ? { id: 1, employee_no: 'DEMO-0001', first_name: 'Ana', last_name: 'Dela Cruz', position: 'HR Manager', status: 'active' }
+        : { id: 2, employee_no: 'DEMO-0002', first_name: 'Marco', last_name: 'Santos', position: 'Software Engineer', status: 'active' },
+    },
+  }
+}
+
 export const useAuthStore = defineStore('auth', {
   // state = the data this store keeps
   state: () => ({
@@ -46,8 +63,10 @@ export const useAuthStore = defineStore('auth', {
       this.saveSession(await authApi.login(email.trim(), password)) // talks to the FastAPI backend
     },
     // "Try the demo": sign in as the demo HR manager or the demo employee. 'hr' | 'employee'
-    async demoLogin(account) {
-      this.saveSession(await authApi.demoLogin(account))
+    // offline = true when there is no backend (the live site): the session is made right here in the browser.
+    // That is safe because the pages only show sample data, and the fake token is useless to any real API.
+    async demoLogin(account, offline = false) {
+      this.saveSession(offline ? offlineDemoSession(account) : await authApi.demoLogin(account))
     },
     // keeps the token and user in the store, and in localStorage so a refresh keeps you signed in
     saveSession(res) {
