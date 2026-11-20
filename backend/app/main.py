@@ -8,12 +8,13 @@ load_dotenv()
 
 from .database import Base, SessionLocal, engine  # noqa: E402  (after load_dotenv so .env is read)
 from .routers import auth  # noqa: E402
-from .seed import create_first_admin  # noqa: E402
+from .seed import create_demo_accounts, create_first_admin  # noqa: E402
 
 Base.metadata.create_all(bind=engine)  # creates the tables on first run
 
 with SessionLocal() as db:
     create_first_admin(db)
+    create_demo_accounts(db)
 
 app = FastAPI(title="HireRise HR API", version="0.1.0")
 
