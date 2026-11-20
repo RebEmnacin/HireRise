@@ -22,7 +22,7 @@ An internal HR management system. Track employee status, attendance, leave and t
 > HireRise is a full-stack portfolio project, built to learn how a real login, role-based pages and an API fit together.
 
 > [!TIP]
-> Just want a look? Open the [live site](https://hirerise.vercel.app) to see the landing page. There is no public demo account: the first admin is created from `.env`, so to sign in and click around, run it locally with the [quick start](#-quick-start).
+> Just want a look? Open the [live site](https://hirerise.vercel.app). On the login page, **Demo as HR** and **Demo as employee** sign you in with no password, so you can see both views. (The buttons appear when the backend runs with `DEMO_MODE=true`.)
 
 > [!WARNING]
 > Work in progress. Login, roles and route guards run on the real backend. Employees, attendance, leave, tasks and the dashboard use **sample data in the browser** for now, and reloading the page resets it. See [Current status](#-current-status).
@@ -167,7 +167,7 @@ npm run dev
 
 </details>
 
-Open http://localhost:5173 and sign in with the admin email and password from your `.env`.
+Open http://localhost:5173 and sign in with the admin email and password from your `.env`. To try the two demo accounts locally, add `DEMO_MODE=true` to `backend/.env` and restart the backend.
 
 > [!IMPORTANT]
 > The backend won't start without a `SECRET_KEY`, and the first admin is only created when `FIRST_ADMIN_EMAIL` and `FIRST_ADMIN_PASSWORD` (8+ characters) are set. Fill all three in `backend/.env` before the first start. Everything else, including Postgres, is in the **[setup guide](SETUP.md)**.
@@ -213,6 +213,7 @@ The frontend and the API are separate apps. In development Vite forwards `/api` 
 |---|---|
 | Health | `GET /api/health` |
 | Auth | `POST /api/auth/login` · `GET /api/auth/me` · `POST /api/auth/change-password` |
+| Demo | `GET /api/auth/demo` · `POST /api/auth/demo-login` (only with `DEMO_MODE=true`) |
 
 The employees, attendance, leave, tasks and dashboard endpoints are next on the [roadmap](#-roadmap).
 
@@ -250,7 +251,8 @@ HireRise/
 4. **No fallback secret.** The backend refuses to start without `SECRET_KEY`.
 5. **Timing-equalized login.** A dummy bcrypt check runs for unknown emails, so response time does not reveal which emails exist.
 6. **First admin on first start only.** Created from `.env` when the users table is empty.
-7. **The landing page is an assembly.** Each section is its own component in `components/landing/`, the wording lives in `data/landing.js`, and the animation helpers are shared.
+7. **Passwordless demo accounts.** With `DEMO_MODE=true` the backend creates an HR and an employee demo account with a random password nobody knows. The only way in is `POST /api/auth/demo-login`, so no password is ever published. The demos are never admin and cannot change their password.
+8. **The landing page is an assembly.** Each section is its own component in `components/landing/`, the wording lives in `data/landing.js`, and the animation helpers are shared.
 
 <h2><img src="docs/icons/h-roadmap.svg" width="26" height="26" align="absmiddle" alt="" /> Roadmap</h2>
 
