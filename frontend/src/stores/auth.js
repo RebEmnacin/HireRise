@@ -43,7 +43,14 @@ export const useAuthStore = defineStore('auth', {
   // actions = functions that change the state
   actions: {
     async login(email, password) {
-      const res = await authApi.login(email.trim(), password)
+      this.saveSession(await authApi.login(email.trim(), password)) // talks to the FastAPI backend
+    },
+    // "Try the demo": sign in as the demo HR manager or the demo employee. 'hr' | 'employee'
+    async demoLogin(account) {
+      this.saveSession(await authApi.demoLogin(account))
+    },
+    // keeps the token and user in the store, and in localStorage so a refresh keeps you signed in
+    saveSession(res) {
       this.token = res.access_token
       this.user = res.user
       try {
