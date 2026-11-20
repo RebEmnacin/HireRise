@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { animate, stagger } from 'motion' // motion.dev, the same library the landing page uses
 import { useAuthStore } from '../stores/auth'
 import { errorMessage } from '../api/client'
+import { authApi } from '../api/endpoints'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -24,6 +25,22 @@ async function submit() {
     error.value = errorMessage(err)
   } finally {
     loading.value = false // runs whether it worked or not
+  }
+}
+
+// "Try the demo": the buttons only show if the backend has DEMO_MODE=true (asked once when the page opens)
+const demoOn = ref(false)
+const demoLoading = ref('') // which demo button is busy: 'hr' | 'employee' | ''
+async function tryDemo(account) {
+  error.value = ''
+  demoLoading.value = account
+  try {
+    await auth.demoLogin(account)
+    router.push({ name: 'dashboard' })
+  } catch (err) {
+    error.value = errorMessage(err)
+  } finally {
+    demoLoading.value = ''
   }
 }
 
@@ -106,6 +123,7 @@ async function playLeaveDemo() {
 }
 
 onMounted(() => {
+  authApi.demoStatus().then((d) => (demoOn.value = Boolean(d.enabled))).catch(() => {}) // no backend / demo off: no buttons
   const items = [...formEl.value.querySelectorAll('[data-in]')]
   const mark = [...markEl.value.querySelectorAll('.lg-draw')]
   const cards = [...demoEl.value.querySelectorAll('.lg-dcard')]
@@ -235,6 +253,21 @@ onBeforeUnmount(() => {
           <span>{{ loading ? 'Signing in…' : 'Sign in' }}</span>
         </button>
         <p class="lg-note" data-in>Forgot your password? Ask HR to reset it.</p>
+
+      <!-- shown only when the backend's DEMO_MODE is on -->
+      <section v-if="demoOn" class="lg-demo-box" aria-label="Try the demo">
+        <p class="lg-or"><span>or look around first</span></p>
+        <div class="lg-demo-btns">
+          <button type="button" class="lg-demo-btn" :disabled="Boolean(demoLoading) || loading" @click="tryDemo('hr')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0" /><circle cx="17" cy="9" r="2.5" /><path d="M16 15a5 5 0 015 5" /></svg>
+            {{ demoLoading === 'hr' ? 'Opening…' : 'Demo as HR' }}
+          </button>
+          <button type="button" class="lg-demo-btn" :disabled="Boolean(demoLoading) || loading" @click="tryDemo('employee')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0116 0" /></svg>
+            {{ demoLoading === 'employee' ? 'Opening…' : 'Demo as employee' }}
+          </button>
+        </div>
+      </section>
       </form>
     </main>
   </div>
@@ -403,6 +436,21 @@ onBeforeUnmount(() => {
 }
 .lg .btn.lg-submit:hover:not(:disabled) { background: var(--brand); border-color: var(--brand); }
 .lg .btn.lg-submit:hover:not(:disabled)::after { left: 130%; transition: left 0.7s ease; }
+/* ---- the "Try the demo" buttons ---- */
+.lg-demo-box { width: min(400px, 100%); margin-top: 18px; }
+.lg-or { display: flex; align-items: center; gap: 12px; font-size: 0.8rem; color: var(--muted); }
+.lg-or::before, .lg-or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.lg-demo-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.lg-demo-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 12px; border: 2px solid var(--ink); border-radius: 999px; background: transparent;
+  color: var(--ink); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+.lg-demo-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lg-demo-btn:hover:not(:disabled) { background: var(--ink); color: var(--white); }
+.lg-demo-btn:active:not(:disabled) { transform: scale(0.96); }
+.lg-demo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .lg-note { margin-top: 20px; font-size: 0.84rem; color: var(--muted); text-align: center; }
 
 /* ---- smaller screens: the dark side goes away, the form fills the screen ---- */
