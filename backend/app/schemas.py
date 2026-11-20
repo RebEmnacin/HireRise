@@ -1,5 +1,5 @@
 """Shapes of the data going in and out of the API (validated by Pydantic)."""
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -35,3 +35,7 @@ class TokenOut(BaseModel):
 class ChangePasswordIn(BaseModel):
     current_password: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+class DemoLoginIn(BaseModel):
+    account: Literal["hr", "employee"]
