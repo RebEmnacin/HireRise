@@ -22,7 +22,7 @@ An internal HR management system. Track employee status, attendance, leave and t
 > HireRise is a full-stack portfolio project, built to learn how a real login, role-based pages and an API fit together.
 
 > [!TIP]
-> Just want a look? Open the [live site](https://hirerise.vercel.app). On the login page, **Demo as HR** and **Demo as employee** sign you in with no password, so you can see both views. (The buttons appear when the backend runs with `DEMO_MODE=true`.)
+> Just want a look? Open the [live site](https://hirerise.vercel.app) and use **Demo as HR** or **Demo as employee** on the login page. No password, and nothing is saved: the live site has no backend yet, so the demo runs in your browser on sample data.
 
 > [!WARNING]
 > Work in progress. Login, roles and route guards run on the real backend. Employees, attendance, leave, tasks and the dashboard use **sample data in the browser** for now, and reloading the page resets it. See [Current status](#-current-status).
@@ -251,7 +251,7 @@ HireRise/
 4. **No fallback secret.** The backend refuses to start without `SECRET_KEY`.
 5. **Timing-equalized login.** A dummy bcrypt check runs for unknown emails, so response time does not reveal which emails exist.
 6. **First admin on first start only.** Created from `.env` when the users table is empty.
-7. **Passwordless demo accounts.** With `DEMO_MODE=true` the backend creates an HR and an employee demo account with a random password nobody knows. The only way in is `POST /api/auth/demo-login`, so no password is ever published. The demos are never admin and cannot change their password.
+7. **Passwordless demo accounts.** With `DEMO_MODE=true` the backend creates an HR and an employee demo account with a random password nobody knows. The only way in is `POST /api/auth/demo-login`, so no password is ever published. When there is no backend at all (the live Vercel site), the same buttons start an in-browser demo session instead, which is safe because every page shows sample data. The demos are never admin and cannot change their password.
 8. **The landing page is an assembly.** Each section is its own component in `components/landing/`, the wording lives in `data/landing.js`, and the animation helpers are shared.
 
 <h2><img src="docs/icons/h-roadmap.svg" width="26" height="26" align="absmiddle" alt="" /> Roadmap</h2>
