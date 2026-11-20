@@ -28,14 +28,18 @@ async function submit() {
   }
 }
 
-// "Try the demo": the buttons only show if the backend has DEMO_MODE=true (asked once when the page opens)
+// "Try the demo". When the page opens it asks the backend:
+//   backend says enabled  -> the buttons sign in through the API
+//   backend says disabled -> no buttons (a private install)
+//   no backend at all (like the live Vercel site, or the API is down) -> the buttons sign in "offline", in the browser
 const demoOn = ref(false)
+const demoOffline = ref(false)
 const demoLoading = ref('') // which demo button is busy: 'hr' | 'employee' | ''
 async function tryDemo(account) {
   error.value = ''
   demoLoading.value = account
   try {
-    await auth.demoLogin(account)
+    await auth.demoLogin(account, demoOffline.value)
     router.push({ name: 'dashboard' })
   } catch (err) {
     error.value = errorMessage(err)
@@ -123,7 +127,15 @@ async function playLeaveDemo() {
 }
 
 onMounted(() => {
-  authApi.demoStatus().then((d) => (demoOn.value = Boolean(d.enabled))).catch(() => {}) // no backend / demo off: no buttons
+  const noBackend = () => {
+    demoOn.value = true
+    demoOffline.value = true
+  }
+  authApi
+    .demoStatus()
+    // a real backend answers with { enabled: true | false }; anything else (like the website's own HTML page) means there is no backend
+    .then((d) => (d && typeof d === 'object' && 'enabled' in d ? (demoOn.value = Boolean(d.enabled)) : noBackend()))
+    .catch(noBackend)
   const items = [...formEl.value.querySelectorAll('[data-in]')]
   const mark = [...markEl.value.querySelectorAll('.lg-draw')]
   const cards = [...demoEl.value.querySelectorAll('.lg-dcard')]
@@ -254,7 +266,7 @@ onBeforeUnmount(() => {
         </button>
         <p class="lg-note" data-in>Forgot your password? Ask HR to reset it.</p>
 
-      <!-- shown only when the backend's DEMO_MODE is on -->
+      <!-- shown when the backend's DEMO_MODE is on, or when there is no backend (then it is an offline demo) -->
       <section v-if="demoOn" class="lg-demo-box" aria-label="Try the demo">
         <p class="lg-or"><span>or look around first</span></p>
         <div class="lg-demo-btns">
@@ -267,6 +279,7 @@ onBeforeUnmount(() => {
             {{ demoLoading === 'employee' ? 'Opening…' : 'Demo as employee' }}
           </button>
         </div>
+        <p v-if="demoOffline" class="lg-demo-note">Demo mode: sample data, nothing is saved.</p>
       </section>
       </form>
     </main>
@@ -447,6 +460,7 @@ onBeforeUnmount(() => {
   color: var(--ink); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer;
   transition: background 0.2s, color 0.2s, transform 0.15s;
 }
+.lg-demo-note { margin-top: 10px; font-size: 0.78rem; color: var(--muted); text-align: center; }
 .lg-demo-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .lg-demo-btn:hover:not(:disabled) { background: var(--ink); color: var(--white); }
 .lg-demo-btn:active:not(:disabled) { transform: scale(0.96); }
