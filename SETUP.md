@@ -58,6 +58,7 @@ Run both: `uvicorn app.main:app --reload --port 8000` in `backend/` (venv active
 | `SECRET_KEY` | Required, no fallback. Never commit it. Changing it logs everyone out |
 | `DATABASE_URL` | Empty = local SQLite file. For Postgres: `postgresql+psycopg://user:pass@host/db` |
 | `FIRST_ADMIN_EMAIL`, `FIRST_ADMIN_PASSWORD` | Used only when the users table is empty |
+| `DEMO_MODE` | Optional. `true` creates two passwordless demo accounts (HR manager and employee) and shows **Demo as HR** and **Demo as employee** buttons on the login page. Leave it off for a private install |
 | `CORS_ORIGINS` | Frontend origins allowed to call the API |
 
 **frontend** (production only): `VITE_API_URL`, for example `https://your-backend.example.com/api`. In development the Vite proxy sends `/api` to port 8000. Never put secrets in a `VITE_` variable.
