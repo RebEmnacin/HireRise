@@ -50,7 +50,6 @@ async function tryDemo(account) {
 
 /* ============ right side: the form ============ */
 const formEl = ref(null)
-const markEl = ref(null) // the little line-art mark above the heading
 
 // a wrong password makes the form shake "no"
 watch(error, (msg) => {
@@ -137,12 +136,9 @@ onMounted(() => {
     .then((d) => (d && typeof d === 'object' && 'enabled' in d ? (demoOn.value = Boolean(d.enabled)) : noBackend()))
     .catch(noBackend)
   const items = [...formEl.value.querySelectorAll('[data-in]')]
-  const mark = [...markEl.value.querySelectorAll('.lg-draw')]
   const cards = [...demoEl.value.querySelectorAll('.lg-dcard')]
   try {
-    // the form: the mark draws itself, then the heading, fields and button follow one after another
-    mark.forEach((s) => (s.style.strokeDashoffset = 1))
-    animate(mark, { strokeDashoffset: [1, 0] }, { duration: 0.9, ease: 'easeInOut', delay: stagger(0.25, { startDelay: 0.3 }) })
+    // the form: the heading, fields and button follow one after another
     animate(items, { opacity: [0, 1], y: [18, 0] }, spring(120, 18, { delay: stagger(0.07, { startDelay: 0.35 }) }))
     // the demo: the three cards slide in from the left, one after another, and the numbers count up
     animate(cards, { opacity: [0, 1], x: [-60, 0] }, spring(90, 16, { delay: stagger(0.12, { startDelay: 0.2 }) }))
@@ -155,7 +151,6 @@ onMounted(() => {
     console.warn('login animation failed, showing the page without it', err)
     items.forEach((el) => (el.style.opacity = 1))
     cards.forEach((el) => (el.style.opacity = 1))
-    mark.forEach((s) => (s.style.strokeDashoffset = 0))
     stats.value = { present: 42, leave: 3, pending: 5 }
   }
 })
@@ -231,13 +226,6 @@ onBeforeUnmount(() => {
       </RouterLink>
 
       <form ref="formEl" class="lg-form" @submit.prevent="submit">
-        <!-- a ring with an arrow rising out of it: "rise". pathLength="1" lets the script draw each line from 0 to 100% -->
-        <svg ref="markEl" class="lg-mark" viewBox="0 0 48 48" aria-hidden="true">
-          <circle class="lg-draw" cx="24" cy="24" r="20" pathLength="1" />
-          <path class="lg-draw" d="M14 31l8-8 5 5 8-10" pathLength="1" />
-          <path class="lg-draw" d="M29 18h6v6" pathLength="1" />
-        </svg>
-
         <h1 data-in>Sign in</h1>
         <p class="lg-form-sub" data-in>Use the account HR created for you.</p>
 
@@ -377,8 +365,6 @@ onBeforeUnmount(() => {
 .lg-back:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
 
 .lg-form { width: min(400px, 100%); }
-.lg-mark { display: block; width: 46px; height: 46px; margin-bottom: 14px; fill: none; stroke: var(--brand); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.lg-mark .lg-draw { stroke-dasharray: 1; }
 .lg-form h1 { font-size: 2.3rem; font-weight: 800; letter-spacing: -0.03em; }
 .lg-form-sub { margin: 8px 0 24px; color: var(--muted); }
 [data-in] { opacity: 0; } /* hidden until the script brings the heading, fields and button in */
