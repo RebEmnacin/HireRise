@@ -29,6 +29,16 @@
   --sidebar-w: 256px;
 }
 
+/* ---------- squircle corners ----------
+   Every corner is a squircle (a smooth, squarer curve) instead of a plain round one: cards, sheets, buttons, chips,
+   inputs, avatars. The radius numbers stay as they are; `corner-shape` only changes the curve.
+   Browsers that don't know corner-shape yet (older Safari and Firefox) ignore it and keep the normal round corner. */
+*,
+*::before,
+*::after {
+  corner-shape: squircle;
+}
+
 /* ---------- 2. base ---------- */
 * {
   box-sizing: border-box; /* content-box | border-box */
