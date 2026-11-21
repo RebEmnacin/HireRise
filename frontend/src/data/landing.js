@@ -53,9 +53,9 @@ export const audiences = [
 
 // how it works: three steps (the icon names come from data/icons.js)
 export const steps = [
-  { n: '01', icon: 'userCheck', tone: 't-dark', title: 'HR creates the account', text: 'An admin or HR adds the employee and the account. There is no public sign-up, so only the right people get in.' },
-  { n: '02', icon: 'clock', tone: 't-light', title: 'The day gets logged', text: 'Employees clock in and out, request leave and update their tasks. Late is counted automatically after 09:15.' },
-  { n: '03', icon: 'dashboard', tone: 't-blue', title: 'HR decides in one click', text: 'Approve or reject leave, then read the whole company at a glance on the dashboard.' },
+  { icon: 'userCheck', tone: 't-dark', title: 'HR creates the account', text: 'An admin or HR adds the employee and the account. There is no public sign-up, so only the right people get in.' },
+  { icon: 'clock', tone: 't-light', title: 'The day gets logged', text: 'Employees clock in and out, request leave and update their tasks. Late is counted automatically after 09:15.' },
+  { icon: 'dashboard', tone: 't-blue', title: 'HR decides in one click', text: 'Approve or reject leave, then read the whole company at a glance on the dashboard.' },
 ]
 
 // built with: what the project is made of, grouped

@@ -36,8 +36,7 @@ onBeforeUnmount(() => stops.forEach((stop) => stop()))
     <h2 class="lp-h2">Three steps, <em>zero spreadsheets.</em></h2>
     <div class="lp-steps">
       <div class="lp-how-line" aria-hidden="true"><i></i></div>
-      <article v-for="s in steps" :key="s.n" class="lp-step" :class="s.tone">
-        <span class="lp-step-n">{{ s.n }}</span>
+      <article v-for="s in steps" :key="s.title" class="lp-step" :class="s.tone">
         <LineIcon :name="s.icon" />
         <h3>{{ s.title }}</h3>
         <p>{{ s.text }}</p>
@@ -95,7 +94,7 @@ onBeforeUnmount(() => stops.forEach((stop) => stop()))
   display: grid;
   align-content: start;
   gap: 12px;
-  min-height: 300px;
+  min-height: 250px;
   padding: 26px;
   border-radius: 20px;
   box-shadow: -6px 12px 34px rgba(6, 22, 42, 0.38);
@@ -104,7 +103,6 @@ onBeforeUnmount(() => stops.forEach((stop) => stop()))
 .lp-step.t-dark { background: var(--lp-dark); color: var(--white); }
 .lp-step.t-light { background: var(--lp-light); color: var(--lp-ink); }
 .lp-step.t-blue { background: var(--lp-blue); color: var(--lp-ink); }
-.lp-step-n { font-family: var(--lp-serif); font-size: 3.2rem; font-weight: 800; line-height: 1; letter-spacing: -0.05em; opacity: 0.9; }
 .lp-step .icon-wrap { display: inline-grid; width: 46px; height: 46px; place-items: center; border-radius: 12px; background: rgba(127, 150, 180, 0.2); }
 .lp-step .icon-wrap svg { width: 24px; height: 24px; }
 .lp-step h3 { font-family: var(--lp-serif); font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
