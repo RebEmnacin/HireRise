@@ -1,7 +1,10 @@
 <script setup>
 // The floating pill at the top: logo, section links, Sign in.
-// Under the links sits a MARKER that shows which section you are in. When you move to another section (or hover
-// another link) it shrinks into a dot, hops across and stretches back into an underline.
+// Under the links sits a MARKER that shows which section you are in.
+//   - resting: an underline under the link of the section you are in
+//   - hovering another link: the marker shrinks into a DOT and hops over to that link. It stays a dot.
+//   - pressing a link: the dot stretches into the underline (it does not shrink and restart)
+//   - leaving the nav: the marker goes back under the section you are in
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { animate } from 'motion'
 import { spring, gentle, reduced, goTo } from '../../lib/landingMotion'
@@ -13,15 +16,18 @@ const SECTIONS = ['features', 'roles', 'how', 'stack', 'faq'] // top to bottom (
 const NAV_OF = { stack: 'how' } // so while you are in "Built with" the marker stays under "How it works"
 const DOT = 6 // px: the size of the dot while travelling
 let activeId = '' // the section you are in (from scrolling)
-let shownEl = null // the link the marker is under right now
-let moveAnim = null // the running hop, so a new hop can cancel it
+let shownEl = null // the link the marker is under right now (or travelling to)
+let shape = 'line' // what the marker is (or is turning into): 'line' | 'dot'
+let hoverEl = null // the link the mouse (or keyboard focus) is on, if any
+let moveAnim = null // the running animation, so a new one can cancel it
 let lockUntil = 0 // after clicking a link we ignore scroll-spy while the page glides there
+const LINE_SPRING = { type: 'spring', stiffness: 380, damping: 22 } // the stretch into the underline, with a tiny overshoot
 
 const linkOf = (id) => linksEl.value?.querySelector(`[data-sec="${NAV_OF[id] ?? id}"]`) ?? null
 const markLinks = (target) =>
   linksEl.value?.querySelectorAll('a').forEach((a) => a.classList.toggle('on', a === target))
 
-// put the marker straight under a link (no animation): used on resize
+// put the marker straight under a link as an underline (no animation): used on resize
 function placeMarker(link) {
   const ind = indEl.value
   moveAnim?.stop()
@@ -32,45 +38,59 @@ function placeMarker(link) {
   }
   ind.style.cssText += `;left:${link.offsetLeft}px;width:${link.offsetWidth}px;height:2px;opacity:1`
   shownEl = link
+  shape = 'line'
 }
 
-// move the marker to a link: underline -> dot -> travel -> underline
-function moveMarker(link) {
+// send the marker to a link, as a 'line' (underline) or a 'dot'
+//   dot -> same link, 'line'  : it just stretches (no shrinking first, so pressing never restarts the animation)
+//   anything -> another link  : (shrink to a dot if it is a line) -> travel -> (stretch if 'line')
+function moveMarker(link, mode = 'line') {
   const ind = indEl.value
-  if (!ind || link === shownEl) return
+  if (!ind) return
   if (!link || !link.offsetWidth) {
     moveAnim?.stop()
     animate(ind, { opacity: 0 }, { duration: 0.2 })
     shownEl = null
     return
   }
+  if (link === shownEl && mode === shape) return
   const first = !shownEl || +getComputedStyle(ind).opacity === 0
+  const sameLink = link === shownEl
   shownEl = link
+  shape = mode
   moveAnim?.stop()
   const toCenter = link.offsetLeft + link.offsetWidth / 2
+  const toLine = { left: link.offsetLeft, width: link.offsetWidth, height: 2 }
   if (first) {
-    // nothing to hop from: a dot pops in under the link, then stretches into the underline
+    // nothing to hop from: a dot pops in under the link (and stretches if it should be an underline)
     ind.style.left = `${toCenter - DOT / 2}px`
     ind.style.width = `${DOT}px`
     ind.style.height = `${DOT}px`
-    moveAnim = animate([
-      [ind, { opacity: 1, scale: [0.4, 1] }, { duration: 0.2 }],
-      [ind, { left: link.offsetLeft, width: link.offsetWidth, height: 2 }, { duration: 0.28, ease: [0.22, 1, 0.36, 1] }],
-    ])
+    const steps = [[ind, { opacity: 1, scale: [0.4, 1] }, { duration: 0.2 }]]
+    if (mode === 'line') steps.push([ind, toLine, LINE_SPRING])
+    moveAnim = animate(steps)
     return
   }
-  const left = parseFloat(getComputedStyle(ind).left)
-  const width = parseFloat(getComputedStyle(ind).width)
+  const cs = getComputedStyle(ind)
+  const left = parseFloat(cs.left)
+  const width = parseFloat(cs.width)
   const fromCenter = left + width / 2
-  const dist = Math.abs(toCenter - fromCenter)
-  moveAnim = animate([
-    // 1. shrink into a dot, right where it is
-    [ind, { left: fromCenter - DOT / 2, width: DOT, height: DOT }, { duration: 0.16, ease: 'easeIn' }],
-    // 2. the dot travels (a little longer for a longer trip)
-    [ind, { left: toCenter - DOT / 2 }, { duration: Math.min(0.2 + dist / 900, 0.5), ease: [0.65, 0, 0.35, 1] }],
-    // 3. it lands and stretches into the underline, with a tiny overshoot
-    [ind, { left: link.offsetLeft, width: link.offsetWidth, height: 2 }, { type: 'spring', stiffness: 380, damping: 22 }],
-  ])
+  const isDot = width <= DOT + 1 // it is already a dot (or on its way to being one)
+  if (sameLink && mode === 'line' && isDot) {
+    moveAnim = animate(ind, toLine, LINE_SPRING)
+    return
+  }
+  const steps = []
+  // 1. shrink into a dot, right where it is
+  if (!isDot) steps.push([ind, { left: fromCenter - DOT / 2, width: DOT, height: DOT }, { duration: 0.16, ease: 'easeIn' }])
+  // 2. the dot travels (a little longer for a longer trip)
+  if (!sameLink) {
+    const dist = Math.abs(toCenter - fromCenter)
+    steps.push([ind, { left: toCenter - DOT / 2 }, { duration: Math.min(0.2 + dist / 900, 0.5), ease: [0.65, 0, 0.35, 1] }])
+  }
+  // 3. only an underline stretches out
+  if (mode === 'line') steps.push([ind, toLine, LINE_SPRING])
+  moveAnim = animate(steps)
 }
 
 // which section are we in? the last one whose top has passed 40% of the way down the screen
@@ -85,7 +105,7 @@ function spy() {
   activeId = cur
   const link = linkOf(cur)
   markLinks(link)
-  moveMarker(link)
+  if (!hoverEl) moveMarker(link, 'line') // while you hover the nav the marker stays with your mouse
 }
 
 let spyFrame = 0
@@ -95,12 +115,18 @@ const onScroll = () => {
 }
 const onResize = () => placeMarker(shownEl && linkOf(activeId))
 
-// hovering a link: the marker hops over to it; leaving the nav sends it back to the section you are in
+// hovering a link: the marker becomes a dot under it (hovering the link you are already in keeps the underline).
+// leaving the nav sends the marker back under the section you are in.
 const onOver = (e) => {
   const a = e.target.closest?.('a[data-sec]')
-  if (a) moveMarker(a)
+  if (!a) return
+  hoverEl = a
+  moveMarker(a, a === linkOf(activeId) ? 'line' : 'dot')
 }
-const onLeave = () => moveMarker(linkOf(activeId))
+const onLeave = () => {
+  hoverEl = null
+  moveMarker(linkOf(activeId), 'line')
+}
 
 // a link was clicked anywhere on the page (goTo in lib/landingMotion.js): go straight to that link instead of
 // hopping through every section the page scrolls past on the way
@@ -109,7 +135,7 @@ const onGoto = (e) => {
   activeId = e.detail
   const link = linkOf(activeId)
   markLinks(link)
-  moveMarker(link)
+  moveMarker(link, 'line') // pressed: the dot you were hovering with stretches into the underline
   setTimeout(spy, 1150)
 }
 
@@ -151,7 +177,7 @@ onBeforeUnmount(() => {
         <a href="#roles" data-sec="roles" @click.prevent="goTo('roles')">Who it's for</a>
         <a href="#how" data-sec="how" @click.prevent="goTo('how')">How it works</a>
         <a href="#faq" data-sec="faq" @click.prevent="goTo('faq')">FAQ</a>
-        <!-- the marker under the links: an underline that shrinks to a dot, hops to the next link, and stretches back -->
+        <!-- the marker under the links: a dot while you hover a link, an underline once you press it -->
         <i ref="indEl" class="lp-ind" aria-hidden="true"></i>
       </nav>
       <RouterLink :to="{ name: 'login' }" class="btn lp-btn lp-btn-accent lp-nav-cta">Sign in</RouterLink>
